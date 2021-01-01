@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>myApplication</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- https://reactjs.org/docs/cdn-links.html -->
+    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <!-- https://socket.io/docs/v3/client-installation/#From-a-CDN -->
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <!-- https://babeljs.io/docs/en/babel-standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+      class MyApp extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            receivedMessages: [],
+          }
+          this.socket = io("http://localhost:3000")
+          this.socket.on("fromServer", (msg) => {
+            console.log(`fromServer: ${msg}`)
+            this.setState({receivedMessages: this.state.receivedMessages.concat([msg])})
+          })
+          this._sendMessage = this._sendMessage.bind(this)
+        }
+        componentDidMount() {
+          console.log("did mount")
+          const f = document.getElementById("form")
+          f.addEventListener("submit", (evt) => {
+            console.log("submit")
+            this._sendMessage()
+            evt.preventDefault()
+          })
+        }
+        componentWillUnmount() {
+          console.log("will unmount")
+        }
+        _sendMessage() {
+          let input = document.getElementById("websocketInput").value
+          this.socket.emit("fromClient", input)
+          //console.log(this.state.receivedMessages)
+        }
+        render() {
+          return (<>
+            <div className="MyApp">
+              <h1>received messages</h1>
+                {this.state.receivedMessages.map((msg) => <p key={msg}>{msg}</p>)}
+              <h1>send message</h1>
+                <form id="form">
+                  <input id="websocketInput" /><input type="submit" value="send" />
+                </form>
+            </div>
+          </>)
+        }
+      }
+      ReactDOM.render(<MyApp />, document.getElementById("app"));
+    </script>
+  </body>
+</html>
+
