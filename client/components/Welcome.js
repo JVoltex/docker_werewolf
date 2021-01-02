@@ -1,6 +1,10 @@
 import Input from "./Input";
+import { useContext } from "react";
+import { SocketContext, PhaseDispatch } from "./Wrapper";
 
 function Welcome() {
+  const dispatch = useContext(PhaseDispatch)
+  const socket = useContext(SocketContext)
   return (
     <div className="columns is-vcentered">
       <div className="column is-8">
@@ -10,9 +14,15 @@ function Welcome() {
         </div>
       </div>
       <div className="column">
-        <div className="field has-addons">
-          <Input prompt="名前" button="けってい" />
-        </div>
+        <Input
+          prompt="名前"
+          button="けってい"
+          onSubmit={(msg) => {
+            console.log("onSubmit")
+            socket.emit("fromClient", msg);
+            dispatch({ type: "game" });
+          }}
+        />
       </div>
     </div>
   );
