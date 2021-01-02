@@ -13,8 +13,8 @@ function Game() {
       setMessages(messages + msg);
     };
     socket.on("fromServerBroadcast", callback);
-    return () => socket.removeListener("fromServer", callback);
-  }, []);
+    return () => socket.removeListener("fromServerBroadcast", callback);
+  });
   return (
     <div className="columns">
       <div className="column">
