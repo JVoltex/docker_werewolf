@@ -1,7 +1,8 @@
 import Welcome from "../components/Welcome";
 import Config from "../components/Config";
 import Game from "../components/Game";
-import { useState, useEffect } from "react";
+import Wrapper, {PhaseDispatch, SocketContext} from "../components/Wrapper";
+import { useState, useEffect, useContext } from "react";
 
 function Main(props) {
   switch (props.phase) {
@@ -17,15 +18,16 @@ function Main(props) {
 }
 
 function App() {
-  const [phase, setPhase] = useState("welcome");
   useEffect(() => {
-    document.title = phase;
+    //document.title = phase;
   });
   return (
       <div className="hero is-fullheight is-black">
         <div className="hero-body">
           <div className="container">
-            <Main phase={phase} />
+            <Wrapper>
+              <Main phase={"welcome"} />
+            </Wrapper>
           </div>
         </div>
       </div>
