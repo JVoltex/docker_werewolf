@@ -1,20 +1,31 @@
 import Input from "./Input";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useReducer } from "react";
 import { SocketContext } from "./Wrapper";
 
+function messagesReducer(state, action) {
+  return { messages: state.messages + action.type };
+}
+//function membersReducer(state, action) {
+//  return { members: action.type };
+//}
+
 function Game() {
-  const [members, setMembers] = useState([]);
-  const [messages, setMessages] = useState("「入室しました");
+  //const [members, membersDispatch] = useReducer(membersReducer, {
+  //  members: [],
+  //});
+  const [messages, messagesDispatch] = useReducer(messagesReducer, {
+    messages: "「入室しました",
+  });
   const socket = useContext(SocketContext);
   useEffect(() => {
     console.log("game effect");
     const callback = (msg) => {
       console.log(msg);
-      setMessages(messages + msg);
+      messagesDispatch({type: msg});
     };
     socket.on("fromServerBroadcast", callback);
     return () => socket.removeListener("fromServerBroadcast", callback);
-  });
+  }, []);
   return (
     <div className="columns">
       <div className="column">
@@ -33,7 +44,7 @@ function Game() {
           <p>チャット</p>
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
-            <p>{messages}</p>
+            <p>{messages.messages}</p>
           </div>
           <Input
             prompt="メッセージ"
