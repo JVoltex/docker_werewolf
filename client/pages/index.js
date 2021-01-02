@@ -1,5 +1,4 @@
 import Welcome from "../components/Welcome";
-import Config from "../components/Config";
 import Game from "../components/Game";
 import Wrapper, { PhaseDispatch, SocketContext } from "../components/Wrapper";
 import { useState, useEffect, useContext } from "react";

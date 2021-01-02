@@ -9,7 +9,7 @@ function Input(props) {
       t.value = ""; // clear textarea
       e.preventDefault();
     });
-  });
+  }, []);
   return (
     <form id="form">
       <div className="field has-addons">

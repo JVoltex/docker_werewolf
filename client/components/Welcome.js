@@ -18,7 +18,6 @@ function Welcome() {
           prompt="名前"
           button="けってい"
           onSubmit={(msg) => {
-            console.log("onSubmit")
             socket.emit("fromClient", msg);
             dispatch({ type: "game" });
           }}

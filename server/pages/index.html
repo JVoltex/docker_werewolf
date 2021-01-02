@@ -42,7 +42,6 @@
         _sendMessage() {
           let input = document.getElementById("websocketInput").value
           this.socket.emit("fromClient", input)
-          //console.log(this.state.receivedMessages)
         }
         render() {
           return (<>
