@@ -8,7 +8,7 @@ function Main(props) {
     case "welcome":
       return <Welcome />;
     case "game":
-      return <Game />;
+      return <Game name={props.name}/>;
     default:
       return "loading...";
   }

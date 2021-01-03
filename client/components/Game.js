@@ -9,7 +9,7 @@ function messagesReducer(state, action) {
 //  return { members: action.type };
 //}
 
-function Game() {
+function Game(props) {
   //const [members, membersDispatch] = useReducer(membersReducer, {
   //  members: [],
   //});
@@ -33,7 +33,7 @@ function Game() {
           <p>メンバー</p>
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
-            <p>占い師</p>
+            <p>{props.name}</p>
             <p>狩人</p>
             <p>霊媒師</p>
           </div>
