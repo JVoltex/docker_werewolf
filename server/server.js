@@ -7,12 +7,14 @@ app.use(express.static("../client/out"))
 
 io.on("connection", (socket) => {
   console.log("connected")
-  socket.on("fromClientChat", (msg) => {
-    console.log(`fromClientChat: ${msg}`)
-    socket.emit("fromServerBroadcast", msg)
+  socket.on("clientMessage", (msg) => {
+    console.log(`clientMessage: ${msg}`)
+    socket.emit("serverMessage", msg)
   })
-  socket.on("fromClient", (msg) => {
-    console.log(`fromClient: ${msg}`)
+  socket.on("clientMemberJoin", (msg) => {
+    console.log(`clientMemberJoin: ${msg}`)
+    socket.emit("serverMemberJoin", "someone")
+    io.emit("serverMessage", `${msg} が入室しました`)
   })
 })
 

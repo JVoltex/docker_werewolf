@@ -1,9 +1,10 @@
 import Input from "./Input";
 import { useContext } from "react";
-import { SocketContext, PhaseDispatch } from "./Wrapper";
+import { SocketContext, PhaseDispatch, NameDispatch } from "./Wrapper";
 
 function Welcome() {
-  const dispatch = useContext(PhaseDispatch)
+  const phaseDispatch = useContext(PhaseDispatch)
+  const nameDispatch = useContext(NameDispatch)
   const socket = useContext(SocketContext)
   return (
     <div className="columns is-vcentered">
@@ -17,9 +18,9 @@ function Welcome() {
         <Input
           prompt="名前"
           button="けってい"
-          onSubmit={(msg) => {
-            socket.emit("fromClient", msg);
-            dispatch({ type: "game" });
+          onSubmit={(name) => {
+            nameDispatch({ type: name });
+            phaseDispatch({ type: "game" });
           }}
         />
       </div>

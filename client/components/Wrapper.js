@@ -24,4 +24,4 @@ function Wrapper(props) {
   );
 }
 
-export { Wrapper as default, PhaseDispatch, SocketContext };
+export { Wrapper as default, PhaseDispatch, SocketContext, NameDispatch };
