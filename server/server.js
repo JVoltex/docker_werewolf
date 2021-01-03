@@ -1,33 +1,83 @@
-const express = require("express")
-const app = express()
-const server = require("http").createServer(app)
-const io = require("socket.io")(server)
+const express = require("express");
+const app = express();
+const server = require("http").createServer(app);
+const io = require("socket.io")(server);
 
-app.use(express.static("../client/out"))
+app.use(express.static("../client/out"));
 
-const members = []
-const n_member = 5
-const jobs = {
+const assign = {
   werewolf: 1,
-  fourtune_teller: 1,
-  hunter: 1,
-  shaman: 1,
-  other: 1
+  other: 2,
+};
+
+async function waitForMember(n) {
+  const members = [];
+  return new Promise((resolve, reject) => {
+    io.on("connection", (socket) => {
+      socket.on("clientMemberJoin", (name) => {
+        socket.on("clientMessage", (msg) => {
+          io.emit("serverMessage", `${name}「${msg}`);
+        }); //broadcast
+        members.push({
+          socket: socket,
+          name: name,
+          job: null,
+          alive: true,
+          rand: Math.random(),
+        });
+        io.emit(
+          "serverMemberJoin",
+          members.map((x) => x.name)
+        );
+        io.emit("serverMessage", `『${name}が入室しました`);
+        console.log(`clientMemberJoin: ${name}`);
+        if (members.length === n) {
+          resolve(members);
+        }
+      });
+    });
+  });
 }
 
-io.on("connection", (socket) => {
-  console.log("connected")
-  socket.on("clientMessage", (msg) => {
-    console.log(`clientMessage: ${msg}`)
-    io.emit("serverMessage", msg)
-  })
-  socket.on("clientMemberJoin", (msg) => {
-    members.push({socket: socket, name: msg})
-    console.log(`clientMemberJoin: ${msg}`)
-    io.emit("serverMemberJoin", members.map((x) => x.name))
-    io.emit("serverMessage", `${msg} が入室しました`)
-    // memo: removeLister
-  })
-})
+class Game {
+  constructor(members, assign) {
+    this.members = members;
+    this.assign = assign;
+    this.status = "prepare";
+  }
+  proceed() {
+    this.prepare();
+  }
+  day() {
+    //members.map
+  }
+  prepare() {
+    const jobs = [];
+    this.members.sort((a, b) => a.rand - b.rand);
+    for (const [k, v] of Object.entries(assign)) {
+      for (let i = 0; i < v; i++) {
+        jobs.push(k);
+      }
+    }
+    for (const i of this.members) {
+      i.job = jobs.pop();
+    }
+    this.members.map((x) => console.log(x.name));
+    this.members.map((x) => console.log(x.job));
+    this.status = "done";
+  }
+}
 
-server.listen(3000)
+async function playGame(assign) {
+  const n = Object.values(assign).reduce((sum, n) => (sum += n), 0);
+  const members = await waitForMember(n);
+  const game = new Game(members, assign);
+  while (game.status !== "done") {
+    game.proceed();
+  }
+  server.close();
+  io.close();
+}
+
+server.listen(3000);
+playGame(assign);

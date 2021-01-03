@@ -3,7 +3,7 @@ import { useContext, useEffect, useReducer } from "react";
 import { SocketContext } from "./Wrapper";
 
 function messagesReducer(state, action) {
-  return { messages: [action.type, ...state.messages] };
+  return { messages: [...state.messages, action.type] };
 }
 function membersReducer(state, action) {
   return { members: action.type };
@@ -30,8 +30,8 @@ function Game(props) {
     socket.on("serverMemberJoin", membersCallback);
     socket.emit("clientMemberJoin", props.name);
     return () => {
-      socket.removeListener("ServerMessage", messageCallback);
-      socket.removeListener("ServerMemberJoin", membersCallback);
+      socket.removeListener("serverMessage", messageCallback);
+      socket.removeListener("serverMemberJoin", membersCallback);
     };
   }, []);
   return (
