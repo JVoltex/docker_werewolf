@@ -3,38 +3,38 @@ import { useContext, useEffect, useReducer } from "react";
 import { SocketContext } from "./Wrapper";
 
 function messagesReducer(state, action) {
-  return { messages: state.messages.concat([action.type]) };
+  return { messages: [action.type, ...state.messages] };
 }
 function membersReducer(state, action) {
-  return { members: action.type }; // return unique members
+  //console.log("reducer");
+  //action.type.split("\t").map((m) => console.log(m));
+  return { members: action.type.split("\t") };
 }
 
 function Game(props) {
   const socket = useContext(SocketContext);
-  // handling messages
   const [messages, messagesDispatch] = useReducer(messagesReducer, {
-    messages: ["init"],
+    messages: [],
   });
-  useEffect(() => {
-    console.log("messages effect");
-    const callback = (msg) => {
-      messagesDispatch({ type: msg });
-    };
-    socket.on("serverMessage", callback);
-    return () => socket.removeListener("ServerMessage", callback);
-  }, []);
-  // handling members
   const [members, membersDispatch] = useReducer(membersReducer, {
     members: [props.name],
   });
   useEffect(() => {
-    console.log("members effect");
-    const callback = (members) => {
+    // handling message
+    const messageCallback = (msg) => {
+      messagesDispatch({ type: { text: msg, timestamp: `${Date.now()}` } });
+    };
+    socket.on("serverMessage", messageCallback);
+    // handling members
+    const membersCallback = (members) => {
       membersDispatch({ type: members });
     };
-    socket.on("serverMemberJoin", callback);
+    socket.on("serverMemberJoin", membersCallback);
     socket.emit("clientMemberJoin", props.name);
-    return () => socket.removeListener("ServerMemberJoin", callback);
+    return () => {
+      socket.removeListener("ServerMessage", messageCallback);
+      socket.removeListener("ServerMemberJoin", membersCallback);
+    };
   }, []);
   return (
     <div className="columns">
@@ -43,8 +43,8 @@ function Game(props) {
           <p>メンバー</p>
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
-            <p>{props.name}</p>
-            <p>{members.members}</p>
+            {members.members.map((member) => (<p key={member}>{member}</p>))}
+            <p>aaa</p>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@ function Game(props) {
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
             {messages.messages.map((msg) => (
-              <p key={msg}>{msg}</p>
+              <p key={msg.timestamp}>{msg.text}</p>
             ))}
           </div>
           <Input

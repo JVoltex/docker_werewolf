@@ -5,15 +5,19 @@ const io = require("socket.io")(server)
 
 app.use(express.static("../client/out"))
 
+const members = []
+
 io.on("connection", (socket) => {
   console.log("connected")
   socket.on("clientMessage", (msg) => {
     console.log(`clientMessage: ${msg}`)
-    socket.emit("serverMessage", msg)
+    io.emit("serverMessage", msg)
   })
   socket.on("clientMemberJoin", (msg) => {
+    members.push(msg)
     console.log(`clientMemberJoin: ${msg}`)
-    socket.emit("serverMemberJoin", "someone")
+    io.emit("serverMemberJoin", members.join("\t"))
+    console.log(members)
     io.emit("serverMessage", `${msg} が入室しました`)
   })
 })
