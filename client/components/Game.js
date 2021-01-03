@@ -3,7 +3,7 @@ import { useContext, useEffect, useReducer } from "react";
 import { SocketContext } from "./Wrapper";
 
 function messagesReducer(state, action) {
-  return { messages: state.messages + action.type };
+  return { messages: state.messages.concat([action.type]) };
 }
 function membersReducer(state, action) {
   return { members: action.type }; // return unique members
@@ -13,29 +13,29 @@ function Game(props) {
   const socket = useContext(SocketContext);
   // handling messages
   const [messages, messagesDispatch] = useReducer(messagesReducer, {
-    messages: "「入室しました",
+    messages: ["init"],
   });
   useEffect(() => {
     console.log("messages effect");
     const callback = (msg) => {
-      messagesDispatch({type: msg});
+      messagesDispatch({ type: msg });
     };
     socket.on("serverMessage", callback);
-    return () => socket.removeListener("ServerBroadcast", callback);
+    return () => socket.removeListener("ServerMessage", callback);
   }, []);
   // handling members
   const [members, membersDispatch] = useReducer(membersReducer, {
     members: [props.name],
   });
   useEffect(() => {
-    console.log("members effect")
+    console.log("members effect");
     const callback = (members) => {
-      membersDispatch({type: members})
-    }
-    socket.on("serverMemberJoin", callback)
-    socket.emit("clientMemberJoin", props.name)
-    return () => socket.removeListener("ServerMemberJoin", callback)
-  }, [])
+      membersDispatch({ type: members });
+    };
+    socket.on("serverMemberJoin", callback);
+    socket.emit("clientMemberJoin", props.name);
+    return () => socket.removeListener("ServerMemberJoin", callback);
+  }, []);
   return (
     <div className="columns">
       <div className="column">
@@ -53,7 +53,9 @@ function Game(props) {
           <p>チャット</p>
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
-            <p>{messages.messages}</p>
+            {messages.messages.map((msg) => (
+              <p key={msg}>{msg}</p>
+            ))}
           </div>
           <Input
             prompt="メッセージ"
