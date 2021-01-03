@@ -34,6 +34,11 @@ function Game(props) {
       socket.removeListener("serverMemberJoin", membersCallback);
     };
   }, []);
+  useEffect(() => {
+    const chat = document.getElementById("chat")
+    chat.scrollTop = chat.scrollHeight
+    // https://stackoverflow.com/questions/270612/scroll-to-bottom-of-div
+  })
   return (
     <div className="columns">
       <div className="column">
@@ -49,7 +54,7 @@ function Game(props) {
         <div className="notification is-black" style={{ border: "3px solid" }}>
           <p>チャット</p>
           <hr />
-          <div style={{ maxHeight: "500px", overflow: "auto" }}>
+          <div id="chat" style={{ maxHeight: "500px", overflow: "auto" }}>
             {messages.messages.map((msg) => (
               <p key={msg.timestamp}>{msg.text}</p>
             ))}
