@@ -6,9 +6,7 @@ function messagesReducer(state, action) {
   return { messages: [action.type, ...state.messages] };
 }
 function membersReducer(state, action) {
-  //console.log("reducer");
-  //action.type.split("\t").map((m) => console.log(m));
-  return { members: action.type.split("\t") };
+  return { members: action.type };
 }
 
 function Game(props) {
@@ -44,7 +42,6 @@ function Game(props) {
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
             {members.members.map((member) => (<p key={member}>{member}</p>))}
-            <p>aaa</p>
           </div>
         </div>
       </div>

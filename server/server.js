@@ -16,7 +16,7 @@ io.on("connection", (socket) => {
   socket.on("clientMemberJoin", (msg) => {
     members.push(msg)
     console.log(`clientMemberJoin: ${msg}`)
-    io.emit("serverMemberJoin", members.join("\t"))
+    io.emit("serverMemberJoin", members)
     console.log(members)
     io.emit("serverMessage", `${msg} が入室しました`)
   })
