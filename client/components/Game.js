@@ -35,10 +35,10 @@ function Game(props) {
     };
   }, []);
   useEffect(() => {
-    const chat = document.getElementById("chat")
-    chat.scrollTop = chat.scrollHeight
+    const chat = document.getElementById("chat");
+    chat.scrollTop = chat.scrollHeight;
     // https://stackoverflow.com/questions/270612/scroll-to-bottom-of-div
-  })
+  });
   return (
     <div className="columns">
       <div className="column">
@@ -46,7 +46,9 @@ function Game(props) {
           <p>メンバー</p>
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
-            {members.members.map((member) => (<p key={member}>{member}</p>))}
+            {members.members.map((member) => (
+              <p key={member}>{member}</p>
+            ))}
           </div>
         </div>
       </div>
@@ -64,6 +66,7 @@ function Game(props) {
             button="▶おくる"
             onSubmit={(msg) => {
               socket.emit("clientMessage", msg);
+              socket.emit("clientVote", msg);
             }}
           />
         </div>

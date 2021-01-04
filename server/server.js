@@ -10,7 +10,7 @@ const assign = {
   other: 2,
 };
 
-async function waitForMember(n) {
+function waitForMember(n) {
   const members = [];
   return new Promise((resolve, reject) => {
     io.on("connection", (socket) => {
@@ -45,14 +45,14 @@ class Game {
     this.assign = assign;
     this.status = "prepare";
   }
-  proceed() {
+  async proceed() {
     switch (this.status) {
       case "prepare":
-        this.prepare();
-        break;
+        return this.prepare();
       case "exit":
-        this.exit();
-        break;
+        return this.exit();
+      case "day":
+        return await this.day();
       default:
         throw Error("default");
     }
@@ -60,8 +60,30 @@ class Game {
   _broadcast(msg) {
     this.members.map((x) => x.socket.emit("serverMessage", msg));
   }
-  day() {
-    //members.map
+  async day() {
+    this._broadcast("『夜が明けましたが人狼の気配が消えません。")
+    this._broadcast("『誰が人狼だと思いますか。")
+    const alive_members = this.members.filter((x) => x.alive)
+    const res = await Promise.all(alive_members.map(x => this._vote(x)))
+    console.log(res)
+    this.status = "exit"
+    return this.status
+  }
+  night() {
+    this._broadcast("『夜が来ました。")
+    this._broadcast("『誰を襲いますか。")
+  }
+  async _vote(member) {
+    const alive_members = this.members.filter((x) => x.alive)
+    member.socket.emit("serverMessage", `『選択してください`)
+    alive_members.map((x, i) => {
+      member.socket.emit("serverMessage", `『${i}: ${x.name}`)
+    })
+    member.socket.on("clientVote", (msg) => {
+      console.log("on clientVote")
+      member.socket.emit("serverMessage", "受け付けました")
+      return msg
+    })
   }
   prepare() {
     const jobs = [];
@@ -76,11 +98,13 @@ class Game {
     }
     this.members.map((x) => console.log(x.name));
     this.members.map((x) => console.log(x.job));
-    this.status = "exit";
+    this.status = "day"
+    return this.status;
   }
   exit() {
     this._broadcast("『ゲームが終了しました")
     this.status = "done"
+    return this.status
   }
 }
 
@@ -89,7 +113,7 @@ async function playGame(assign) {
   const members = await waitForMember(n);
   const game = new Game(members, assign);
   while (game.status !== "done") {
-    game.proceed();
+    await game.proceed();
   }
   server.close();
   io.close();
