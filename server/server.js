@@ -46,7 +46,19 @@ class Game {
     this.status = "prepare";
   }
   proceed() {
-    this.prepare();
+    switch (this.status) {
+      case "prepare":
+        this.prepare();
+        break;
+      case "exit":
+        this.exit();
+        break;
+      default:
+        throw Error("default");
+    }
+  }
+  _broadcast(msg) {
+    this.members.map((x) => x.socket.emit("serverMessage", msg));
   }
   day() {
     //members.map
@@ -64,7 +76,11 @@ class Game {
     }
     this.members.map((x) => console.log(x.name));
     this.members.map((x) => console.log(x.job));
-    this.status = "done";
+    this.status = "exit";
+  }
+  exit() {
+    this._broadcast("『ゲームが終了しました")
+    this.status = "done"
   }
 }
 
