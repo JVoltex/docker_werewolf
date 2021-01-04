@@ -79,10 +79,11 @@ class Game {
     alive_members.map((x, i) => {
       member.socket.emit("serverMessage", `『${i}: ${x.name}`)
     })
-    member.socket.on("clientVote", (msg) => {
-      console.log("on clientVote")
-      member.socket.emit("serverMessage", "受け付けました")
-      return msg
+    return new Promise((resolve, reject) => {
+      member.socket.on("clientVote", (msg) => {
+        member.socket.emit("serverMessage", "received")
+        resolve(msg)
+      })
     })
   }
   prepare() {
