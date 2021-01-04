@@ -66,7 +66,6 @@ function Game(props) {
             button="▶おくる"
             onSubmit={(msg) => {
               socket.emit("clientMessage", msg);
-              socket.emit("clientVote", msg);
             }}
           />
         </div>
