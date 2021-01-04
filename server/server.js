@@ -58,6 +58,11 @@ class Game {
         throw Error("default");
     }
   }
+  _sleep(sec) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => resolve("time"), sec * 1000)
+    })
+  }
   _broadcast(msg) {
     this.members.map((x) => x.socket.emit("serverMessage", msg));
   }
@@ -88,11 +93,13 @@ class Game {
         if (msg.match(/[^0-9]/)) this._broadcast(msg);
       })
     );
-    this._broadcast("『夜が明けましたが人狼の気配が消えません。");
+    this._broadcast("『昼です");
     this._broadcast("『誰が人狼だと思いますか。");
+    await this._sleep(10)
+    this._broadcast("time!")
+    this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
     const alive_members = this.members.filter((x) => x.alive);
     const alive_ids = alive_members.map(x => x.id)
-    this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
     const res = await Promise.all(alive_members.map((x) => this._vote(x)));
     this._broadcast("『全員が投票しました");
     let victim = {id: null, n: 0}
@@ -106,7 +113,7 @@ class Game {
     this.members[victim.id].alive = false
     return this._judge();
   }
-  night() {
+  async night() {
     this.members
       .filter((x) => x.job === "werewolf")
       .map((x) =>
@@ -116,9 +123,23 @@ class Game {
       );
     this._broadcast("『夜が来ました。");
     this._broadcast_wolf("『誰を襲いますか。");
+    await this._sleep(10)
     this.members
       .filter((x) => x.job === "werewolf")
       .map((x) => x.socket.removeAllListeners("clientMessage"));
+    const alive_members = this.members.filter((x) => x.alive);
+    const alive_ids = alive_members.map(x => x.id)
+    const res = await Promise.all(alive_members.map((x) => this._vote(x)));
+    this._broadcast("『襲撃されました");
+    let victim = {id: null, n: 0}
+    for (const i of alive_ids) {
+      let n = res.filter(x => Number(x) === i).length
+      if (victim.n <= n) {
+        victim = {id: i, n: n}
+      }
+    }
+    this._broadcast(`犠牲者は${this.members[victim.id].name}です`)
+    this.members[victim.id].alive = false
     return this._judge();
   }
   _vote(member) {
