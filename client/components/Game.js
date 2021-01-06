@@ -33,7 +33,7 @@ function Game(props) {
     socket.emit("clientMemberJoin", props.name);
     return () => {
       socket.removeListener("serverMessage", messageCallback);
-      socket.removeListener("serverMemberJoin", membersCallback);
+      //socket.removeListener("serverMemberJoin", membersCallback);
     };
   }, []);
   useEffect(() => {

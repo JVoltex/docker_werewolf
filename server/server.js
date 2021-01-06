@@ -130,7 +130,8 @@ class Game {
       }
     }
     this._broadcast(`犠牲者は${this.members[victim.id].name}です`);
-    this.members[victim.id].alive = false;
+    //this.members[victim.id].alive = false;
+    this._kill(victim.id)
     return this._judge();
   }
   async night() {
@@ -191,14 +192,15 @@ class Game {
   prepare() {
     const jobs = [];
     let id = 0;
-    this.members.sort((a, b) => a.rand - b.rand);
+    // this.members.sort((a, b) => a.rand - b.rand);
     for (const [k, v] of Object.entries(assign)) {
       for (let i = 0; i < v; i++) {
-        jobs.push(k);
+        jobs.push({job: k, rand: Math.random()});
       }
     }
+    jobs.sort((a, b) => a.rand - b.rand)
     for (const i of this.members) {
-      i.job = jobs.pop();
+      i.job = jobs.pop().job;
       i.id = id;
       id++;
     }
