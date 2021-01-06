@@ -3,6 +3,7 @@ const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 const Game = require("./lib/game")
+const Member = require("./lib/member")
 
 app.use(express.static("../client/out"));
 
@@ -17,7 +18,6 @@ function waitForMember(n) {
     io.on("connection", (socket) => {
       socket.on("clientMemberJoin", (name) => {
         members.push({
-          id: null,
           socket: socket,
           name: name,
           job: null,

@@ -1,5 +1,6 @@
 "use strict";
 const { sleep } = require("./utils");
+const Member = require("./member")
 
 class Game {
   constructor(members, assign) {
@@ -70,7 +71,7 @@ class Game {
     this._broadcast("time!");
     this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
     const alive_members = this.members.filter((x) => x.alive);
-    const alive_ids = alive_members.map((x) => x.id);
+    const alive_ids = alive_members.map((x, i) => i);
     const res = await Promise.all(alive_members.map((x) => this._vote(x)));
     this._broadcast("『全員が投票しました");
     let victim = { id: null, n: 0 };
@@ -100,7 +101,7 @@ class Game {
       .filter((x) => x.job === "人狼")
       .map((x) => x.socket.removeAllListeners("clientMessage"));
     const alive_members = this.members.filter((x) => x.alive);
-    const alive_ids = alive_members.map((x) => x.id);
+    const alive_ids = alive_members.map((x, i) => i);
     const res = await Promise.all(alive_members.map((x) => this._vote(x)));
     this._broadcast("『襲撃されました");
     let victim = { id: null, n: 0 };
@@ -120,13 +121,13 @@ class Game {
       type: "plain",
       text: `『選択してください`,
     });
-    alive_members.map((x) => {
+    alive_members.map((x, i) => {
       member.socket.emit("serverMessage", {
         type: "plain",
-        text: `『${x.id}: ${x.name}`,
+        text: `『${i}: ${x.name}`,
       });
     });
-    const alive_ids = alive_members.map((x) => x.id);
+    const alive_ids = alive_members.map((x, i) => i);
     return new Promise((resolve, reject) => {
       member.socket.on("clientMessage", (msg) => {
         if (alive_ids.indexOf(Number(msg)) >= 0) {
@@ -142,7 +143,6 @@ class Game {
   }
   prepare() {
     const jobs = [];
-    let id = 0;
     // this.members.sort((a, b) => a.rand - b.rand);
     for (const [k, v] of Object.entries(this.assign)) {
       for (let i = 0; i < v; i++) {
@@ -152,8 +152,6 @@ class Game {
     jobs.sort((a, b) => a.rand - b.rand);
     for (const i of this.members) {
       i.job = jobs.pop().job;
-      i.id = id;
-      id++;
     }
     this.members.map((x) => console.log(x.name));
     this.members.map((x) => console.log(x.job));
