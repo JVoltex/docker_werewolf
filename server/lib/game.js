@@ -1,6 +1,5 @@
 "use strict";
 const { sleep } = require("./utils");
-const Member = require("./member")
 
 class Game {
   constructor(members, assign) {
@@ -143,7 +142,6 @@ class Game {
   }
   prepare() {
     const jobs = [];
-    // this.members.sort((a, b) => a.rand - b.rand);
     for (const [k, v] of Object.entries(this.assign)) {
       for (let i = 0; i < v; i++) {
         jobs.push({ job: k, rand: Math.random() });
