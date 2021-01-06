@@ -20,7 +20,9 @@ function Game(props) {
   useEffect(() => {
     // handling message
     const messageCallback = (msg) => {
-      messagesDispatch({ type: { text: msg, timestamp: `${Date.now()}` } });
+      messagesDispatch({
+        type: { type: msg.type, text: msg.text, timestamp: `${Date.now()}` },
+      });
     };
     socket.on("serverMessage", messageCallback);
     // handling members
@@ -46,9 +48,15 @@ function Game(props) {
           <p>メンバー</p>
           <hr />
           <div style={{ maxHeight: "500px", overflow: "auto" }}>
-            {members.members.map((member) => (
-              <p key={member}>{member}</p>
-            ))}
+            {members.members.map((member) => {
+              if (member.alive) {
+                return <p key={member.name}>{member.name}</p>;
+              } else {
+                return <s>
+                  <p key={member.name}>{member.name}</p>
+                </s>;
+              }
+            })}
           </div>
         </div>
       </div>
@@ -57,9 +65,20 @@ function Game(props) {
           <p>チャット</p>
           <hr />
           <div id="chat" style={{ maxHeight: "500px", overflow: "auto" }}>
-            {messages.messages.map((msg) => (
-              <p key={msg.timestamp}>{msg.text}</p>
-            ))}
+            {messages.messages.map((msg) => {
+              if (msg.type === "important") {
+                return (
+                  <div
+                    className="notification is-primary is-light"
+                    key={msg.timestamp}
+                  >
+                    {msg.text}
+                  </div>
+                );
+              } else {
+                return <p key={msg.timestamp}>{msg.text}</p>;
+              }
+            })}
           </div>
           <Input
             prompt="メッセージ"

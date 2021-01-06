@@ -25,9 +25,18 @@ function waitForMember(n) {
         });
         io.emit(
           "serverMemberJoin",
-          members.map((x) => x.name)
+          members.map((x) => {
+            return { name: x.name, alive: true };
+          })
         );
-        io.emit("serverMessage", `『${name}が入室しました`);
+        socket.emit("serverMessage", {
+          type: "plain",
+          text: `村長「ようこそ${name}さん。`,
+        });
+        socket.emit("serverMessage", {
+          type: "plain",
+          text: `村長「皆が揃うまでしばし待たれよ。`,
+        });
         console.log(`clientMemberJoin: ${name}`);
         if (members.length === n) {
           members.map((x) => x.socket.removeAllListeners("clientMemberJoin"));
@@ -64,18 +73,29 @@ class Game {
     });
   }
   _broadcast(msg) {
-    this.members.map((x) => x.socket.emit("serverMessage", msg));
+    this.members.map((x) =>
+      x.socket.emit("serverMessage", { type: "plain", text: msg })
+    );
   }
   _broadcast_wolf(msg) {
     this.members
       .filter((x) => x.job === "人狼")
       .map((x) => x.socket.emit("severMessage", msg));
   }
+  _kill(idx) {
+    this.members[idx].alive = false;
+    this._broadcast(`${this.members[idx].name}が死亡しました`);
+    io.emit(
+      "serverMemberJoin",
+      this.members.map((x) => {
+        return { name: x.name, alive: x.alive };
+      })
+    );
+  }
   _judge() {
     const n_alive = this.members.filter((x) => x.alive).length;
-    const n_alive_wolf = this.members.filter(
-      (x) => x.alive && x.job === "人狼"
-    ).length;
+    const n_alive_wolf = this.members.filter((x) => x.alive && x.job === "人狼")
+      .length;
     if (n_alive_wolf / n_alive >= 0.5) {
       this._broadcast("人狼の勝利です");
       this.status = "exit";
@@ -144,15 +164,24 @@ class Game {
   }
   _vote(member) {
     const alive_members = this.members.filter((x) => x.alive);
-    member.socket.emit("serverMessage", `『選択してください`);
+    member.socket.emit("serverMessage", {
+      type: "plain",
+      text: `『選択してください`,
+    });
     alive_members.map((x) => {
-      member.socket.emit("serverMessage", `『${x.id}: ${x.name}`);
+      member.socket.emit("serverMessage", {
+        type: "plain",
+        text: `『${x.id}: ${x.name}`,
+      });
     });
     const alive_ids = alive_members.map((x) => x.id);
     return new Promise((resolve, reject) => {
       member.socket.on("clientMessage", (msg) => {
         if (alive_ids.indexOf(Number(msg)) >= 0) {
-          member.socket.emit("serverMessage", "『投票を受け付けました");
+          member.socket.emit("serverMessage", {
+            type: "plain",
+            text: "『投票を受け付けました",
+          });
           member.socket.removeAllListeners("clientMessage");
           resolve(msg);
         }
@@ -176,7 +205,10 @@ class Game {
     this.members.map((x) => console.log(x.name));
     this.members.map((x) => console.log(x.job));
     this.members.map((x) =>
-      x.socket.emit("serverMessage", `『あなたは${x.job}です。`)
+      x.socket.emit("serverMessage", {
+        type: "important",
+        text: `『あなたは${x.job}です。`,
+      })
     );
     this.status = "day";
     return this.status;
