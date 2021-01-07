@@ -139,23 +139,28 @@ class Game {
     this.members[victim.id].alive = false;
     return this._judge();
   }
-  _choice(job, alive) {
-    if (!job) {
-      job = this.allJobs;
-    }
-    if (!alive) {
-      alive = [true, false];
-    }
-  }
-  _waitForChoice(jobS, aliveS, jobO, aliveO) {
-    subjects = this._filterMembers(jobS, aliveS);
-    targets = this._filterMembers(jobO, aliveO);
-    let msg = "選択してください。";
-    from = this.members.filter((x) => {
-      Math.min(job.indexOf(x.jobO), alive.indexOf(x.aliveO)) !== -1;
+  _choice(subject, objects) {
+    const validId = objects.map((x, i) => i);
+    return new Promise((resolve, reject) => {
+      subject.socket.on("clientMessage", (msg) => {
+        if (validId.indexOf(Number(msg)) !== -1) {
+          notify(subject.socket, "投票を受け付けました。");
+          subject.socket.removeAllListeners("clientMessage");
+          resolve(msg);
+        }
+      });
     });
-    this._broadcast(msg, notify, jobS, aliveS);
-    // await this._choice()
+  }
+  async _waitForChoice(jobS, aliveS, jobO, aliveO) {
+    const subjects = this._filterMembers(jobS, aliveS);
+    const objects = this._filterMembers(jobO, aliveO);
+    this._broadcast("選択してください。", jobS, aliveS);
+    objects.map((x, i) => {
+      this._broadcast(`${i}: ${x.name}`, message, jobS, aliveS);
+    });
+    const choices = await Promise.all(
+      subjects.map((x) => this._choice(x, objects))
+    );
   }
   _vote(member) {
     const alive_members = this.members.filter((x) => x.alive);
