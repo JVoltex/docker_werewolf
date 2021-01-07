@@ -2,17 +2,16 @@
 const { sleep, mayorSays, notify, message } = require("./utils");
 
 class Game {
-  constructor(members, assign) {
+  constructor(members, assign, timeLimit=5) {
     this.members = members;
     this.assign = assign;
     this.status = "prepare";
+    this.timeLimit = timeLimit;
   }
   async proceed() {
     switch (this.status) {
       case "prepare":
         return this.prepare();
-      case "exit":
-        return this.exit();
       case "day":
         return await this.day();
       case "night":
@@ -53,26 +52,32 @@ class Game {
       .length;
     if (n_alive_wolf / n_alive >= 0.5) {
       this._broadcast("人狼の勝利です", notify);
-      this.status = "exit";
+      this.status = "done";
     } else if (n_alive_wolf === 0) {
       this._broadcast("市民の勝利です", notify);
-      this.status = "exit";
+      this.status = "done";
     } else {
       this.status = this.status === "day" ? "night" : "day";
     }
     return this.status;
   }
-  async day() {
+  _startChat() {
     this.members.map((x) =>
       x.socket.on("clientMessage", (msg) => {
         if (msg.match(/[^0-9]/)) this._broadcast(msg);
       })
     );
-    this._broadcast("『昼です");
-    this._broadcast("『誰が人狼だと思いますか。");
-    await sleep();
-    this._broadcast("time!");
+  }
+  _stopChat() {
     this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
+  }
+  async day() {
+    this._broadcast("さてさて昼が来たぞ。", mayorSays);
+    this._broadcast(`日が沈むまでの${this.timeLimit}秒間で人狼を暴くのだ。`, mayorSays);
+    this._startChat()
+    await sleep(this.timeLimit);
+    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayorSays);
+    this._stopChat()
     const alive_members = this.members.filter((x) => x.alive);
     const alive_ids = alive_members.map((x, i) => i);
     const res = await Promise.all(alive_members.map((x) => this._vote(x)));
@@ -155,19 +160,9 @@ class Game {
     for (const i of this.members) {
       i.job = jobs.pop().job;
     }
-    this.members.map((x) => console.log(x.name));
-    this.members.map((x) => console.log(x.job));
-    this.members.map((x) =>
-      x.socket.emit("serverMessage", {
-        type: "important",
-        text: `『あなたは${x.job}です。`,
-      })
-    );
+    this.members.map((x) => console.log(`${x.name}: ${x.job}`)); // debag
+    this.members.map((x) => notify(x.socket, `あなたは${x.job}です。`));
     this.status = "day";
-    return this.status;
-  }
-  exit() {
-    this.status = "done";
     return this.status;
   }
 }
