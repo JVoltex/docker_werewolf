@@ -21,6 +21,14 @@ class Game {
         throw Error("default");
     }
   }
+  _sendMemberInfo() {
+    this.members.map((x) =>
+      x.socket.emit(
+        "serverMemberJoin",
+        this.members.map((y) => y.formatForClient())
+      )
+    );
+  }
   _broadcast(msg) {
     this.members.map((x) =>
       x.socket.emit("serverMessage", { type: "plain", text: msg })
@@ -34,14 +42,7 @@ class Game {
   _kill(idx) {
     this.members[idx].alive = false;
     this._broadcast(`${this.members[idx].name}が死亡しました`);
-    this.members.map((x) =>
-      x.socket.emit(
-        "serverMemberJoin",
-        this.members.map((x) => {
-          return { name: x.name, alive: x.alive };
-        })
-      )
-    );
+    this._sendMemberInfo()
   }
   _judge() {
     const n_alive = this.members.filter((x) => x.alive).length;
