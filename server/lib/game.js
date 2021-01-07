@@ -1,5 +1,5 @@
 "use strict";
-const { sleep } = require("./utils");
+const { sleep, mayorSays, notify, message } = require("./utils");
 
 class Game {
   constructor(members, assign) {
@@ -29,30 +29,33 @@ class Game {
       )
     );
   }
-  _broadcast(msg) {
-    this.members.map((x) =>
-      x.socket.emit("serverMessage", { type: "plain", text: msg })
-    );
-  }
-  _broadcast_wolf(msg) {
-    this.members
-      .filter((x) => x.job === "人狼")
-      .map((x) => x.socket.emit("severMessage", msg));
+  _broadcast(msg, func = message, job = null, alive = null) {
+    if (job === null) {
+      job = this.members.map((x) => x.job); // all jobs
+    }
+    if (alive === null) {
+      alive = [true, false];
+    }
+    this.members.map((x) => {
+      if (Math.min(job.indexOf(x.job), alive.indexOf(x.alive)) !== -1) {
+        func(x.socket, msg);
+      }
+    });
   }
   _kill(idx) {
     this.members[idx].alive = false;
-    this._broadcast(`${this.members[idx].name}が死亡しました`);
-    this._sendMemberInfo()
+    this._broadcast(`${this.members[idx].name}が死亡しました`, notify);
+    this._sendMemberInfo();
   }
   _judge() {
     const n_alive = this.members.filter((x) => x.alive).length;
     const n_alive_wolf = this.members.filter((x) => x.alive && x.job === "人狼")
       .length;
     if (n_alive_wolf / n_alive >= 0.5) {
-      this._broadcast("人狼の勝利です");
+      this._broadcast("人狼の勝利です", notify);
       this.status = "exit";
     } else if (n_alive_wolf === 0) {
-      this._broadcast("市民の勝利です");
+      this._broadcast("市民の勝利です", notify);
       this.status = "exit";
     } else {
       this.status = this.status === "day" ? "night" : "day";
@@ -91,11 +94,11 @@ class Game {
       .filter((x) => x.job === "人狼")
       .map((x) =>
         x.socket.on("clientMessage", (msg) => {
-          if (msg.match(/[^0-9]/)) this._broadcast_wolf(msg);
+          if (msg.match(/[^0-9]/)) this._broadcast(msg, message, ["人狼"]);
         })
       );
     this._broadcast("『夜が来ました。");
-    this._broadcast_wolf("『誰を襲いますか。");
+    this._broadcast_wolf("『誰を襲いますか。", message, ["人狼"]);
     await sleep();
     this.members
       .filter((x) => x.job === "人狼")
@@ -130,7 +133,7 @@ class Game {
     const alive_ids = alive_members.map((x, i) => i);
     return new Promise((resolve, reject) => {
       member.socket.on("clientMessage", (msg) => {
-        if (alive_ids.indexOf(Number(msg)) >= 0) {
+        if (alive_ids.indexOf(Number(msg)) !== -1) {
           member.socket.emit("serverMessage", {
             type: "plain",
             text: "『投票を受け付けました",
@@ -164,7 +167,6 @@ class Game {
     return this.status;
   }
   exit() {
-    this._broadcast("『ゲームが終了しました");
     this.status = "done";
     return this.status;
   }

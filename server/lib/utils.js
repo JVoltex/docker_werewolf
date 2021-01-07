@@ -19,3 +19,10 @@ module.exports.notify = (socket, msg) => {
     text: `${msg}`,
   });
 };
+
+module.exports.message = (socket, msg) => {
+  socket.emit("serverMessage", {
+    type: "plain",
+    text: `${msg}`,
+  });
+};
