@@ -5,28 +5,23 @@ const Game = require("./game");
 const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
+const { mayorSays } = require("./utils");
 
-const waitForMembers = (n, io) => {
+const waitForMembers = (n, server) => {
   const members = [];
   return new Promise((resolve, reject) => {
-    io.on("connection", (socket) => {
+    server.ws.on("connection", (socket) => {
       socket.on("clientMemberJoin", (name) => {
         members.push(new Member(name, socket));
-        io.emit(
-          "serverMemberJoin",
-          members.map((x) => {
-            return { name: x.name, alive: true };
-          })
-        );
-        socket.emit("serverMessage", {
-          type: "plain",
-          text: `村長「ようこそ${name}さん。`,
+        members.map((x, i, ary) => {
+          x.socket.emit(
+            "serverMemberJoin",
+            ary.map((y) => y.formatForClient())
+          );
         });
-        socket.emit("serverMessage", {
-          type: "plain",
-          text: `村長「皆が揃うまでしばし待たれよ。`,
-        });
-        console.log(`clientMemberJoin: ${name}`);
+        mayorSays(socket, `ようこそ${name}さん。`);
+        mayorSays(socket, `皆が揃うまでしばし待たれよ。`);
+        console.log(`memberJoin: ${name}`);
         if (members.length === n) {
           members.map((x) => x.socket.removeAllListeners("clientMemberJoin"));
           resolve(members);
@@ -36,15 +31,21 @@ const waitForMembers = (n, io) => {
   });
 };
 
-module.exports.createServer = (static_dir, port) => {
-  const app = express();
-  app.use(express.static(static_dir));
-  const httpServer = http.createServer(app);
-  const socketServer = new Server(httpServer);
-  return {
-    http: httpServer,
-    ws: socketServer,
-  };
+module.exports.GameServer = class GameServer {
+  constructor(staticDir, port) {
+    const app = express();
+    app.use(express.static(staticDir));
+    this.http = http.createServer(app);
+    this.ws = new Server(this.http);
+    this.port = port;
+  }
+  start() {
+    this.http.listen(this.port);
+  }
+  close() {
+    this.http.close();
+    this.ws.close();
+  }
 };
 
 module.exports.playGame = async (assign, server) => {
