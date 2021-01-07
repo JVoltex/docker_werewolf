@@ -2,7 +2,7 @@
 const { sleep, mayorSays, notify, message } = require("./utils");
 
 class Game {
-  constructor(members, assign, timeLimit=5) {
+  constructor(members, assign, timeLimit = 5) {
     this.members = members;
     this.assign = assign;
     this.status = "prepare";
@@ -20,6 +20,20 @@ class Game {
         throw Error("default");
     }
   }
+  get allJobs() {
+    return this.members.map((x) => x.job);
+  }
+  _filterMembers(job, alive) {
+    if (!job) {
+      job = this.allJobs;
+    }
+    if (!alive) {
+      alive = [true, false];
+    }
+    return this.members.filter((x) => {
+      return Math.min(job.indexOf(x.job), alive.indexOf(x.alive)) !== -1;
+    });
+  }
   _sendMemberInfo() {
     this.members.map((x) =>
       x.socket.emit(
@@ -28,17 +42,10 @@ class Game {
       )
     );
   }
-  _broadcast(msg, func = message, job = null, alive = null) {
-    if (job === null) {
-      job = this.members.map((x) => x.job); // all jobs
-    }
-    if (alive === null) {
-      alive = [true, false];
-    }
-    this.members.map((x) => {
-      if (Math.min(job.indexOf(x.job), alive.indexOf(x.alive)) !== -1) {
-        func(x.socket, msg);
-      }
+  _broadcast(msg, func = message, job, alive) {
+    const targets = this._filterMembers(job, alive);
+    targets.map((x) => {
+      func(x.socket, msg);
     });
   }
   _kill(idx) {
@@ -71,13 +78,22 @@ class Game {
   _stopChat() {
     this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
   }
+  async _chat() {
+    this._startChat();
+    await sleep(this.timeLimit);
+    this._stopChat();
+  }
   async day() {
     this._broadcast("さてさて昼が来たぞ。", mayorSays);
-    this._broadcast(`日が沈むまでの${this.timeLimit}秒間で人狼を暴くのだ。`, mayorSays);
-    this._startChat()
-    await sleep(this.timeLimit);
-    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayorSays);
-    this._stopChat()
+    this._broadcast(
+      `日が沈むまでの${this.timeLimit}秒間で人狼を暴くのじゃ。`,
+      mayorSays
+    );
+    await this._chat();
+    this._broadcast(
+      "話し合いは十分だろう。さあ人狼を始末するのじゃ。",
+      mayorSays
+    );
     const alive_members = this.members.filter((x) => x.alive);
     const alive_ids = alive_members.map((x, i) => i);
     const res = await Promise.all(alive_members.map((x) => this._vote(x)));
@@ -123,6 +139,24 @@ class Game {
     this.members[victim.id].alive = false;
     return this._judge();
   }
+  _choice(job, alive) {
+    if (!job) {
+      job = this.allJobs;
+    }
+    if (!alive) {
+      alive = [true, false];
+    }
+  }
+  _waitForChoice(jobS, aliveS, jobO, aliveO) {
+    subjects = this._filterMembers(jobS, aliveS);
+    targets = this._filterMembers(jobO, aliveO);
+    let msg = "選択してください。";
+    from = this.members.filter((x) => {
+      Math.min(job.indexOf(x.jobO), alive.indexOf(x.aliveO)) !== -1;
+    });
+    this._broadcast(msg, notify, jobS, aliveS);
+    // await this._choice()
+  }
   _vote(member) {
     const alive_members = this.members.filter((x) => x.alive);
     member.socket.emit("serverMessage", {
@@ -141,7 +175,7 @@ class Game {
         if (alive_ids.indexOf(Number(msg)) !== -1) {
           member.socket.emit("serverMessage", {
             type: "plain",
-            text: "『投票を受け付けました",
+            text: "投票を受け付けました",
           });
           member.socket.removeAllListeners("clientMessage");
           resolve(msg);
