@@ -96,7 +96,7 @@ class Game {
     );
     const alive_members = this.members.filter((x) => x.alive);
     const alive_ids = alive_members.map((x, i) => i);
-    const res = await Promise.all(alive_members.map((x) => this._vote(x)));
+    const res = await this._waitForChoice();
     this._broadcast("『全員が投票しました");
     let victim = { id: null, n: 0 };
     for (const i of alive_ids) {
@@ -161,6 +161,7 @@ class Game {
     const choices = await Promise.all(
       subjects.map((x) => this._choice(x, objects))
     );
+    return choices
   }
   _vote(member) {
     const alive_members = this.members.filter((x) => x.alive);
