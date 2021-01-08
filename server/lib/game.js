@@ -102,32 +102,16 @@ class Game {
     return this._judge();
   }
   async night() {
-    this.members
-      .filter((x) => x.job === "人狼")
-      .map((x) =>
-        x.socket.on("clientMessage", (msg) => {
-          if (msg.match(/[^0-9]/)) this._broadcast(msg, message, ["人狼"]);
-        })
-      );
-    this._broadcast("『夜が来ました。");
-    this._broadcast_wolf("『誰を襲いますか。", message, ["人狼"]);
-    await sleep();
-    this.members
-      .filter((x) => x.job === "人狼")
-      .map((x) => x.socket.removeAllListeners("clientMessage"));
-    const alive_members = this.members.filter((x) => x.alive);
-    const alive_ids = alive_members.map((x, i) => i);
-    const res = await Promise.all(alive_members.map((x) => this._vote(x)));
-    this._broadcast("『襲撃されました");
-    let victim = { id: null, n: 0 };
-    for (const i of alive_ids) {
-      let n = res.filter((x) => Number(x) === i).length;
-      if (victim.n <= n) {
-        victim = { id: i, n: n };
-      }
-    }
-    this._broadcast(`犠牲者は${this.members[victim.id].name}です`);
-    this.members[victim.id].alive = false;
+    this._broadcast("また夜が来たが、どうも嫌な予感がするわい。", mayorSays);
+    this._broadcast(`夜が明けるまで${this.timeLimit}秒ほど用心するのじゃ。`, mayorSays);
+    await sleep(this.timeLimit);
+    this._broadcast(
+      "もう少しの辛抱じゃ。",
+      mayorSays
+    );
+    const res = await this._waitForChoice(["人狼"], [true], ["市民", "霊媒師", "占い師", "狩人"], [true])
+    const victim = mode(res)
+    this._kill(victim)
     return this._judge();
   }
   _choice(subject, objects) {
@@ -153,32 +137,6 @@ class Game {
       subjects.map((x) => this._choice(x, objects))
     );
     return choices
-  }
-  _vote(member) {
-    const alive_members = this.members.filter((x) => x.alive);
-    member.socket.emit("serverMessage", {
-      type: "plain",
-      text: `『選択してください`,
-    });
-    alive_members.map((x, i) => {
-      member.socket.emit("serverMessage", {
-        type: "plain",
-        text: `『${i}: ${x.name}`,
-      });
-    });
-    const alive_ids = alive_members.map((x, i) => i);
-    return new Promise((resolve, reject) => {
-      member.socket.on("clientMessage", (msg) => {
-        if (alive_ids.indexOf(Number(msg)) !== -1) {
-          member.socket.emit("serverMessage", {
-            type: "plain",
-            text: "投票を受け付けました",
-          });
-          member.socket.removeAllListeners("clientMessage");
-          resolve(msg);
-        }
-      });
-    });
   }
   prepare() {
     const jobs = [];
