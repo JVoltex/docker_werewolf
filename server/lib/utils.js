@@ -6,6 +6,14 @@ module.exports.sleep = (sec = 1) => {
   });
 };
 
+const message_base = (socket, msg, type = "plain") => {
+  socket.emit("serverMessage", {
+    type: type,
+    text: msg,
+  });
+};
+module.exports.message_base = message_base
+
 module.exports.mayorSays = (socket, msg) => {
   socket.emit("serverMessage", {
     type: "plain",
@@ -23,19 +31,20 @@ module.exports.notify = (socket, msg) => {
 module.exports.message = (socket, msg) => {
   socket.emit("serverMessage", {
     type: "plain",
-    text: `${msg}`,
+    text: `『${msg}`,
   });
 };
 
 module.exports.mode = (ary) => {
-  let mode = null
-  let max = 0
+  let mode = null;
+  let max = 0;
   for (const i of new Set(ary)) {
-    const len = ary.filter(x => x === i).length
+    const len = ary.filter((x) => x === i).length;
     if (max < len) {
-      mode = i
-      max = len
+      mode = i;
+      max = len;
     }
   }
-  return mode 
-}
+  return mode;
+};
+
