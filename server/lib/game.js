@@ -1,5 +1,5 @@
 "use strict";
-const { sleep, mayorSays, notify, message } = require("./utils");
+const { sleep, mayorSays, notify, message, mode} = require("./utils");
 
 class Game {
   constructor(members, assign, timeLimit = 5) {
@@ -48,9 +48,9 @@ class Game {
       func(x.socket, msg);
     });
   }
-  _kill(idx) {
-    this.members[idx].alive = false;
-    this._broadcast(`${this.members[idx].name}が死亡しました`, notify);
+  _kill(member) {
+    member.alive = false;
+    this._broadcast(`${member.name}が死亡しました`, notify);
     this._sendMemberInfo();
   }
   _judge() {
@@ -97,17 +97,8 @@ class Game {
     const alive_members = this.members.filter((x) => x.alive);
     const alive_ids = alive_members.map((x, i) => i);
     const res = await this._waitForChoice();
-    this._broadcast("『全員が投票しました");
-    let victim = { id: null, n: 0 };
-    for (const i of alive_ids) {
-      let n = res.filter((x) => Number(x) === i).length;
-      if (victim.n <= n) {
-        victim = { id: i, n: n };
-      }
-    }
-    this._broadcast(`犠牲者は${this.members[victim.id].name}です`);
-    //this.members[victim.id].alive = false;
-    this._kill(victim.id);
+    const victim = mode(res)
+    this._kill(victim);
     return this._judge();
   }
   async night() {
@@ -146,7 +137,7 @@ class Game {
         if (validId.indexOf(Number(msg)) !== -1) {
           notify(subject.socket, "投票を受け付けました。");
           subject.socket.removeAllListeners("clientMessage");
-          resolve(msg);
+          resolve(this.members[Number(msg)]);
         }
       });
     });

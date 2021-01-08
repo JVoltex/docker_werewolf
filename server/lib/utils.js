@@ -26,3 +26,16 @@ module.exports.message = (socket, msg) => {
     text: `${msg}`,
   });
 };
+
+module.exports.mode = (ary) => {
+  let mode = null
+  let max = 0
+  for (const i of new Set(ary)) {
+    const len = ary.filter(x => x === i).length
+    if (max < len) {
+      mode = i
+      max = len
+    }
+  }
+  return mode 
+}
