@@ -5,7 +5,7 @@ const Game = require("./game");
 const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
-const { mayorSays } = require("./utils");
+const { mayor } = require("./utils");
 
 const waitForMembers = (n, server) => {
   const members = [];
@@ -19,8 +19,8 @@ const waitForMembers = (n, server) => {
             ary.map((y) => y.formatForClient())
           );
         });
-        mayorSays(socket, `ようこそ${name}さん。`);
-        mayorSays(socket, `皆が揃うまでしばし待たれよ。`);
+        mayor(socket, `ようこそ${name}さん。`);
+        mayor(socket, `皆が揃うまでしばし待たれよ。`);
         console.log(`memberJoin: ${name}`);
         if (members.length === n) {
           members.map((x) => x.socket.removeAllListeners("clientMemberJoin"));
@@ -52,7 +52,7 @@ module.exports.playGame = async (assign, server) => {
   const n = Object.values(assign).reduce((sum, n) => (sum += n), 0);
   const members = await waitForMembers(n, server);
   const game = new Game(members, assign);
-  while (game.status !== "done") {
+  while (game.next !== "done") {
     await game.proceed();
   }
 };

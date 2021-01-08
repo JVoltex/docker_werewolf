@@ -14,35 +14,26 @@ const message_base = (socket, msg, type = "plain") => {
 };
 module.exports.message_base = message_base
 
-module.exports.mayorSays = (socket, msg) => {
-  socket.emit("serverMessage", {
-    type: "plain",
-    text: `村長「${msg}`,
-  });
+module.exports.mayor = (socket, msg) => {
+  message_base(socket, `村長「${msg}`, "plain")
 };
 
 module.exports.notify = (socket, msg) => {
-  socket.emit("serverMessage", {
-    type: "important",
-    text: `${msg}`,
-  });
+  message_base(socket, `${msg}`, "important")
 };
 
 module.exports.message = (socket, msg) => {
-  socket.emit("serverMessage", {
-    type: "plain",
-    text: `『${msg}`,
-  });
+  message_base(socket, `『${msg}`, "plain")
 };
 
 module.exports.mode = (ary) => {
   let mode = null;
-  let max = 0;
+  let count = 0;
   for (const i of new Set(ary)) {
-    const len = ary.filter((x) => x === i).length;
-    if (max < len) {
+    const c = ary.filter((x) => x === i).length;
+    if (count < c) {
       mode = i;
-      max = len;
+      count = c;
     }
   }
   return mode;
