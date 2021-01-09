@@ -55,7 +55,7 @@ function Game(props) {
                 return (
                   <p
                     key={member.name}
-                    style={{ color: "gray", textDecoration: "line-through" }}
+                    style={{ color: "gray" }}
                   >
                     {member.name}
                   </p>
