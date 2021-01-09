@@ -19,7 +19,7 @@ const waitForMembers = (n, server) => {
             ary.map((y) => y.formatForClient())
           );
         });
-        mayor(socket, `ようこそ${name}さん。`);
+        mayor(socket, `ようこそ【${name}】さん。`);
         mayor(socket, `皆が揃うまでしばし待たれよ。`);
         console.log(`memberJoin: ${name}`);
         if (members.length === n) {

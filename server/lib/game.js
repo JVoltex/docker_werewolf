@@ -24,13 +24,17 @@ class Game {
   async proceed() {
     switch (this.next) {
       case "prepare":
-        return this.prepare();
+        this.prepare();
+        break;
       case "judge":
-        return this._judge();
+        this._judge();
+        break;
       case "day":
-        return await this.day();
+        await this.day();
+        break;
       case "night":
-        return await this.night();
+        await this.night();
+        break;
       default:
         throw Error("default");
     }
@@ -47,7 +51,8 @@ class Game {
       i.job = jobs.pop().job;
     }
     this.members.map((x) => console.log(`${x.name}: ${x.job}`)); // debag
-    this.members.map((x) => notify(x.socket, `あなたは${x.job}です。`));
+    this.members.map((x) => notify(x.socket, `あなたは【${x.job}】です。`));
+    this._sendMemberInfo();
     this.previous = this.next;
     this.next = "judge";
     return;
@@ -75,13 +80,10 @@ class Game {
       mayor
     );
     await this._chat();
-    this._broadcast(
-      "話し合いは十分だろう。さあ人狼を始末するのじゃ。",
-      mayor
-    );
+    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
     const alive_members = this.members.filter((x) => x.alive);
     const alive_ids = alive_members.map((x, i) => i);
-    const res = await this._waitForChoice("誰が人狼だと思いますか。");
+    const res = await this._waitForChoice("誰が人狼だと思いますか。", null, [true], null, [true]);
     const victim = mode(res);
     this._kill(victim);
     this.previous = this.next;
@@ -104,7 +106,12 @@ class Game {
       [true]
     );
     const victim = mode(res);
-    this._kill(victim);
+    const protectedMembers = await this._waitForChoice("誰を守りますか。", "狩人", [true], null, [true])
+    if (protectedMembers.indexOf(victim) === -1) {
+      this._kill(victim);
+    } else {
+      this._broadcast("誰も死にませんでした。", notify)
+    }
     this.previous = this.next;
     this.next = "judge";
     return;
@@ -122,12 +129,9 @@ class Game {
     });
   }
   _sendMemberInfo() {
-    this.members.map((x) =>
-      x.socket.emit(
-        "serverMemberJoin",
-        this.members.map((y) => y.formatForClient())
-      )
-    );
+    this.members.map((x) => {
+      x.receiveMemberInfo(this.members);
+    });
   }
   _broadcast(msg, func = message, job, alive) {
     const targets = this._filterMembers(job, alive);
@@ -137,7 +141,7 @@ class Game {
   }
   _kill(member) {
     member.alive = false;
-    this._broadcast(`${member.name}が死亡しました`, notify);
+    this._broadcast(`【${member.name}】が死亡しました`, notify);
     this._sendMemberInfo();
   }
   _startChat(job = null) {
@@ -159,6 +163,13 @@ class Game {
   }
   _choice(prompt, subject, objects) {
     const validId = objects.map((x, i) => i);
+    objects = objects.filter((x) => x !== subject);
+    // when there is no choice
+    if (objects.length === 0) {
+      message(subject.socket, "少々お待ちください...");
+      return Promise.resolve(null);
+    }
+    // when there are some choices
     message(subject.socket, prompt);
     objects.map((x, i) => message(subject.socket, `${i}: ${x.name}`));
     return new Promise((resolve, reject) => {
@@ -166,7 +177,7 @@ class Game {
         if (validId.indexOf(Number(msg)) !== -1) {
           message(subject.socket, "投票を受け付けました。");
           subject.socket.removeAllListeners("clientMessage");
-          resolve(this.members[Number(msg)]);
+          resolve(objects[Number(msg)]);
         }
       });
     });

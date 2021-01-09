@@ -52,9 +52,14 @@ function Game(props) {
               if (member.alive) {
                 return <p key={member.name}>{member.name}</p>;
               } else {
-                return <s>
-                  <p key={member.name}>{member.name}</p>
-                </s>;
+                return (
+                  <p
+                    key={member.name}
+                    style={{ color: "silver", textDecoration: "line-through" }}
+                  >
+                    {member.name}
+                  </p>
+                );
               }
             })}
           </div>
