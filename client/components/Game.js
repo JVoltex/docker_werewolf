@@ -47,7 +47,7 @@ function Game(props) {
         <div className="notification is-black" style={{ border: "3px solid" }}>
           <p>メンバー</p>
           <hr />
-          <div style={{ maxHeight: "500px", overflow: "auto" }}>
+          <div style={{ maxHeight: "450px", overflow: "auto" }}>
             {members.members.map((member) => {
               if (member.alive) {
                 return <p key={member.name}>{member.name}</p>;
@@ -55,7 +55,7 @@ function Game(props) {
                 return (
                   <p
                     key={member.name}
-                    style={{ color: "silver", textDecoration: "line-through" }}
+                    style={{ color: "gray", textDecoration: "line-through" }}
                   >
                     {member.name}
                   </p>
@@ -74,7 +74,7 @@ function Game(props) {
               if (msg.type === "important") {
                 return (
                   <div
-                    className="notification is-primary is-light"
+                    className="notification is-primary is-light my-1"
                     key={msg.timestamp}
                   >
                     {msg.text}

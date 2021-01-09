@@ -5,7 +5,7 @@ const Game = require("./game");
 const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
-const { mayor } = require("./utils");
+const { mayor, inputInt } = require("./utils");
 
 const waitForMembers = (n, server) => {
   const members = [];
@@ -14,10 +14,7 @@ const waitForMembers = (n, server) => {
       socket.on("clientMemberJoin", (name) => {
         members.push(new Member(name, socket));
         members.map((x, i, ary) => {
-          x.socket.emit(
-            "serverMemberJoin",
-            ary.map((y) => y.formatForClient())
-          );
+          x.receiveMemberInfo(ary)
         });
         mayor(socket, `ようこそ【${name}】さん。`);
         mayor(socket, `皆が揃うまでしばし待たれよ。`);
@@ -56,3 +53,19 @@ module.exports.playGame = async (assign, server) => {
     await game.proceed();
   }
 };
+
+module.exports.inputAssign = async (jobs) => {
+  const inputs = []
+  for (const j of jobs) {
+    const n = await inputInt(`【${j}】は何人？（半角数字）：`)
+    inputs.push(n)
+  }
+  const res = {}
+  for (let i = 0; i < jobs.length; i++) {
+    res[jobs[i]] = inputs[i]
+  }
+  console.log("以下の設定でゲームを開始します。")
+  console.log("ブラウザからアクセスしてください。")
+  console.log(res)
+  return res
+}

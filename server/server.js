@@ -1,17 +1,12 @@
-const { GameServer, playGame } = require("./lib/controller");
-const assign = {
-  人狼: 1,
-  市民: 1,
-  狩人: 1,
-  占い師: 1,
-  霊媒師: 1,
-};
+const { GameServer, playGame, inputAssign } = require("./lib/controller");
 
-const playGameOnce = async (assign, port, staticDir="../client/out/") => {
+const playGameOnce = async (jobs, port, staticDir="../client/out/") => {
+  const assign = await inputAssign(jobs)
   const server = new GameServer(staticDir, port)
   server.start();
   await playGame(assign, server);
   server.close()
 }
 
-playGameOnce(assign, 3000)
+const jobs = ["人狼", "占い師", "霊媒師", "狩人", "市民"]
+playGameOnce(jobs, 3000)

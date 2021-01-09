@@ -6,6 +6,7 @@ const {
   message,
   mode,
   message_base,
+  randomSort,
 } = require("./utils");
 
 class Game {
@@ -40,15 +41,13 @@ class Game {
     }
   }
   prepare() {
-    const jobs = [];
+    let jobs = [];
     for (const [k, v] of Object.entries(this.assign)) {
-      for (let i = 0; i < v; i++) {
-        jobs.push({ job: k, rand: Math.random() });
-      }
+      for (let i = 0; i < v; i++) jobs.push(k);
     }
-    jobs.sort((a, b) => a.rand - b.rand);
+    jobs = randomSort(jobs);
     for (const i of this.members) {
-      i.job = jobs.pop().job;
+      i.job = jobs.pop();
     }
     this.members.map((x) => console.log(`${x.name}: ${x.job}`)); // debag
     this.members.map((x) => notify(x.socket, `あなたは【${x.job}】です。`));
@@ -80,10 +79,22 @@ class Game {
       mayor
     );
     await this._chat();
-    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
+    this._broadcast(
+      "話し合いは十分だろう。さあ人狼を始末するのじゃ。",
+      mayor,
+      null,
+      null,
+      true
+    );
     const alive_members = this.members.filter((x) => x.alive);
-    const alive_ids = alive_members.map((x, i) => i);
-    const res = await this._waitForChoice("誰が人狼だと思いますか。", null, [true], null, [true]);
+    const res = await this._waitForChoice(
+      "誰が人狼だと思いますか。",
+      null,
+      [true],
+      null,
+      [true],
+      true
+    );
     const victim = mode(res);
     this._kill(victim);
     this.previous = this.next;
@@ -94,23 +105,18 @@ class Game {
     this._broadcast("夜が来たぞ。どうも嫌な予感がするわい。", mayor);
     this._broadcast(
       `日が昇るまで${this.timeLimit}秒ほど用心するのじゃ。`,
-      mayor
+      mayor,
+      ["市民", "占い師", "霊媒師", "狩人"]
     );
+    this._broadcast("襲撃対象を相談してください", mayor, ["人狼"]);
     await this._chat(["人狼"]);
-    this._broadcast("もう少しの辛抱じゃ。", mayor);
-    const res = await this._waitForChoice(
-      "誰を襲いますか。",
-      ["人狼"],
-      [true],
-      ["市民", "霊媒師", "占い師", "狩人"],
-      [true]
-    );
-    const victim = mode(res);
-    const protectedMembers = await this._waitForChoice("誰を守りますか。", "狩人", [true], null, [true])
+    const res = await this._waitForNightChoice();
+    const victim = mode(res[0]);
+    const protectedMembers = res[1];
     if (protectedMembers.indexOf(victim) === -1) {
       this._kill(victim);
     } else {
-      this._broadcast("誰も死にませんでした。", notify)
+      this._broadcast("誰も死にませんでした。", notify);
     }
     this.previous = this.next;
     this.next = "judge";
@@ -162,8 +168,8 @@ class Game {
     this._stopChat();
   }
   _choice(prompt, subject, objects) {
-    const validId = objects.map((x, i) => i);
     objects = objects.filter((x) => x !== subject);
+    const validId = objects.map((x, i) => i);
     // when there is no choice
     if (objects.length === 0) {
       message(subject.socket, "少々お待ちください...");
@@ -175,20 +181,37 @@ class Game {
     return new Promise((resolve, reject) => {
       subject.socket.on("clientMessage", (msg) => {
         if (validId.indexOf(Number(msg)) !== -1) {
-          message(subject.socket, "投票を受け付けました。");
+          message(subject.socket, "選択を受け付けました。");
+          if (this.next === "night") subject.nightAction(objects[Number(msg)]);
           subject.socket.removeAllListeners("clientMessage");
           resolve(objects[Number(msg)]);
         }
       });
     });
   }
-  async _waitForChoice(prompt, jobS, aliveS, jobO, aliveO) {
+  async _waitForChoice(prompt, jobS, aliveS, jobO, aliveO, broadcast = false) {
     const subjects = this._filterMembers(jobS, aliveS);
     const objects = this._filterMembers(jobO, aliveO);
     const choices = await Promise.all(
       subjects.map((x) => this._choice(prompt, x, objects))
     );
+    if (broadcast) {
+      for (let i = 0; i < subjects.length; i++) {
+        this._broadcast(`${subjects[i].name} -> ${choices[i].name}`);
+      }
+    }
     return choices;
+  }
+  async _waitForNightChoice() {
+    const res = await Promise.all([
+      this._waitForChoice("誰を守りますか。", "狩人", [true], null, [true]),
+      this._waitForChoice("誰を襲いますか。", "人狼", [true], null, [true]),
+      this._waitForChoice("誰を占いますか。", "占い師", [true], null, [true]),
+      this._waitForChoice("誰の霊と語りますか。", "霊媒師", [true], null, [
+        false,
+      ]),
+    ]);
+    return res;
   }
 }
 
