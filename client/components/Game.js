@@ -79,6 +79,8 @@ function Game(props) {
                     {msg.text}
                   </div>
                 );
+              } else if (msg.type === "dead") {
+                return <p key={msg.timestamp} style={{ color: "gray" }}>=>{msg.text}</p>;
               } else {
                 return <p key={msg.timestamp}>{msg.text}</p>;
               }

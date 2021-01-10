@@ -125,7 +125,7 @@ class Game {
       if (!m.alive) {
         m.socket.on("clientMessage", (msg) => {
           this._filterMembers((x) => !x.alive).map((x) =>
-            plainMessage(x.socket, `${m.name}「${msg}`)
+            plainMessage(x.socket, `${m.name}「${msg}`, "dead")
           );
         }); // only to dead
       } else if (m.job === "人狼" && this.current === this.night) {
