@@ -1,5 +1,5 @@
 "use strict";
-const {message} = require("./utils")
+const {info} = require("./utils")
 
 class Member {
   constructor(name, socket) {
@@ -38,7 +38,7 @@ class Member {
         } else {
           msg = `【${choice.name}】は人狼ではありません。`
         }
-        message(this.socket, msg)
+        info(this.socket, msg)
         break;
       case "占い師":
         if (choice.job === "人狼") {
@@ -46,7 +46,7 @@ class Member {
         } else {
           msg = `【${choice.name}】は人狼ではありません。`
         }
-        message(this.socket, msg)
+        info(this.socket, msg)
         break;
     }
   }

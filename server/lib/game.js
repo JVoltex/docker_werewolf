@@ -17,10 +17,6 @@ class Game {
     this.previous = null;
     this.timeLimit = timeLimit;
   }
-  // getter & setter
-  get allJobs() {
-    return this.members.map((x) => x.job);
-  }
   // controll method
   async proceed() {
     switch (this.next) {
@@ -77,21 +73,13 @@ class Game {
       `日が沈むまでの${this.timeLimit}秒間で人狼を暴くのじゃ。`,
       mayor
     );
-    await this._chat();
-    this._broadcast(
-      "話し合いは十分だろう。さあ人狼を始末するのじゃ。",
-      mayor,
-      null,
-      null,
-      true
-    );
+    await this._chat((x) => true);
+    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
     const alive_members = this.members.filter((x) => x.alive);
     const res = await this._waitForChoice(
       "誰が人狼だと思いますか。",
-      null,
-      [true],
-      null,
-      [true],
+      (x) => x.alive,
+      (x) => x.alive,
       true
     );
     const victim = mode(res);
@@ -105,10 +93,14 @@ class Game {
     this._broadcast(
       `日が昇るまで${this.timeLimit}秒ほど用心するのじゃ。`,
       mayor,
-      ["市民", "占い師", "霊媒師", "狩人"]
+      (x) => x.job !== "人狼"
     );
-    this._broadcast("襲撃対象を相談してください", mayor, ["人狼"]);
-    await this._chat(["人狼"]);
+    this._broadcast(
+      `${this.timeLimit}秒で襲撃対象を相談してください`,
+      mayor,
+      (x) => x.job === "人狼"
+    );
+    await this._chat((x) => x.job === "人狼");
     const res = await this._waitForNightChoice();
     const victim = mode(res[0]);
     const protectedMembers = res[1];
@@ -122,26 +114,19 @@ class Game {
     return;
   }
   // utils
-  _filterMembers(job, alive) {
-    if (!job) {
-      job = this.allJobs;
-    }
-    if (!alive) {
-      alive = [true, false];
-    }
-    return this.members.filter((x) => {
-      return Math.min(job.indexOf(x.job), alive.indexOf(x.alive)) !== -1;
-    });
+  _filterMembers(func) {
+    return this.members.filter(func);
   }
   _sendMemberInfo() {
     this.members.map((x) => {
       x.receiveMemberInfo(this.members);
     });
   }
-  _broadcast(msg, func = info, job, alive) {
-    const targets = this._filterMembers(job, alive);
+  _broadcast(msg, msgFunc = info, filterFunc) {
+    if (!filterFunc) filterFunc = (x) => true
+    const targets = this._filterMembers(filterFunc);
     targets.map((x) => {
-      func(x.socket, msg);
+      msgFunc(x.socket, msg);
     });
   }
   _kill(member) {
@@ -149,8 +134,8 @@ class Game {
     this._broadcast(`【${member.name}】が死亡しました`, note);
     this._sendMemberInfo();
   }
-  _startChat(job = null) {
-    const members = this._filterMembers(job);
+  _startChat(filterFunc) {
+    const members = this._filterMembers(filterFunc);
     members.map((x) =>
       x.socket.on("clientMessage", (msg) => {
         if (msg.match(/[^0-9]/))
@@ -161,8 +146,8 @@ class Game {
   _stopChat() {
     this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
   }
-  async _chat(job) {
-    this._startChat(job);
+  async _chat(filterFunc) {
+    this._startChat(filterFunc);
     await sleep(this.timeLimit);
     this._stopChat();
   }
@@ -188,9 +173,9 @@ class Game {
       });
     });
   }
-  async _waitForChoice(prompt, jobS, aliveS, jobO, aliveO, broadcast = false) {
-    const subjects = this._filterMembers(jobS, aliveS);
-    const objects = this._filterMembers(jobO, aliveO);
+  async _waitForChoice(prompt, filterFuncS, filterFuncO, broadcast) {
+    const subjects = this._filterMembers(filterFuncS);
+    const objects = this._filterMembers(filterFuncO);
     const choices = await Promise.all(
       subjects.map((x) => this._choice(prompt, x, objects))
     );
@@ -203,12 +188,26 @@ class Game {
   }
   async _waitForNightChoice() {
     const res = await Promise.all([
-      this._waitForChoice("誰を襲いますか。", "人狼", [true], null, [true]),
-      this._waitForChoice("誰を守りますか。", "狩人", [true], null, [true]),
-      this._waitForChoice("誰を占いますか。", "占い師", [true], null, [true]),
-      this._waitForChoice("誰の霊と語りますか。", "霊媒師", [true], null, [
-        false,
-      ]),
+      this._waitForChoice(
+        "誰を襲いますか。",
+        (x) => x.job === "人狼",
+        (x) => x.alive
+      ),
+      this._waitForChoice(
+        "誰を守りますか。",
+        (x) => x.job === "狩人",
+        (x) => x.alive
+      ),
+      this._waitForChoice(
+        "誰を占いますか。",
+        (x) => x.job === "占い師",
+        (x) => x.alive
+      ),
+      this._waitForChoice(
+        "誰の霊と語りますか。",
+        (x) => x.job === "霊媒師",
+        (x) => !x.alive
+      ),
     ]);
     return res;
   }
