@@ -10,7 +10,7 @@ const {
 } = require("./utils");
 
 class Game {
-  constructor(members, assign, server, timeLimit = 5) {
+  constructor(members, assign, timeLimit = 5) {
     this.members = members;
     this.assign = assign;
     this.next = this.prepare;
@@ -33,9 +33,6 @@ class Game {
       i.job = jobs.pop();
     }
     this.members.map((x) => note(x.socket, `あなたは【${x.job}】です。`));
-    this._filterMembers((x) => x.job === "人狼").map((x) => {
-      x.socket.join("人狼");
-    });
     this._sendMemberInfo();
     this.next = this.judge;
     return;
@@ -64,7 +61,7 @@ class Game {
       `日が沈むまでの${this.timeLimit}秒間で人狼を暴くのじゃ。`,
       mayor
     );
-    await Promise.all([this._chat((x) => x.alive), this.chat((x) => !x.alive)]);
+    await this._chat();
     this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
     const res = await this._waitForChoices(
       "誰が人狼だと思いますか。",
@@ -90,10 +87,7 @@ class Game {
       info,
       (x) => x.job === "人狼"
     );
-    await Promise.all([
-      this._chat((x) => x.alive && x.job === "人狼"),
-      this.chat((x) => !x.alive),
-    ]);
+    await this._chat();
     const res = await this._waitForNightChoices();
     const victim = mode(res[0]);
     const protectedMembers = res[1];
@@ -124,33 +118,44 @@ class Game {
   _kill(member) {
     member.alive = false;
     this._broadcast(`【${member.name}】が死亡しました`, note);
-    member.socket.join("死亡");
     this._sendMemberInfo();
   }
   _startChat() {
-    for (m of this.members) {
-      if (m.socket.rooms.has("死亡")) {
+    for (const m of this.members) {
+      if (!m.alive) {
         m.socket.on("clientMessage", (msg) => {
-          io
-        })
+          this._filterMembers((x) => !x.alive).map((x) =>
+            plainMessage(x.socket, `${m.name}「${msg}`)
+          );
+        }); // only to dead
+      } else if (m.job === "人狼" && this.current === this.night) {
+        m.socket.on("clientMessage", (msg) => {
+          this._filterMembers((x) => x.job === "人狼").map((x) => {
+            plainMessage(x.socket, `${m.name}「${msg}`);
+          });
+        }); // only to wolf
+      } else if (this.current === this.night) {
+        m.socket.on("clientMessage", (msg) => {
+          this.members.map((x) => {
+            plainMessage(x.socket, `？？「ガヤガヤ`);
+          });
+        }); // to everyone
+      } else {
+        m.socket.on("clientMessage", (msg) => {
+          this.members.map((x) => {
+            plainMessage(x.socket, `${m.name}「${msg}`);
+          });
+        }); // to everyone
       }
     }
-    const members = this._filterMembers(filterFunc);
-    members.map((x) =>
-      x.socket.on("clientMessage", (msg) => {
-        if (msg.match(/[^0-9]/))
-          members.map((y) => plainMessage(y.socket, `${x.name}「${msg}`));
-      })
-    );
   }
   _stopChat() {
-    const members = this._filterMembers(filterFunc);
-    members.map((x) => x.socket.removeAllListeners("clientMessage"));
+    this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
   }
   async _chat() {
     // have to fix
     this._startChat();
-    await sleep();
+    await sleep(this.timeLimit);
     this._stopChat();
   }
   _waitForSingleChoice(prompt, subject, objects) {

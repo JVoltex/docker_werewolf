@@ -47,7 +47,7 @@ module.exports.GameServer = class GameServer {
 module.exports.playGame = async (assign, timeLimit, server) => {
   const n = Object.values(assign).reduce((sum, n) => (sum += n), 0);
   const members = await waitForMembers(n, server);
-  const game = new Game(members, assign, server, timeLimit);
+  const game = new Game(members, assign, timeLimit);
   while (game.next !== null) {
     await game.proceed();
   }

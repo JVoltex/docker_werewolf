@@ -44,7 +44,7 @@ class Member {
         }
         break;
     }
-    info(this.socket, msg);
+    if (msg) info(this.socket, msg);
   }
 }
 module.exports = Member;
