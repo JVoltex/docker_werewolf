@@ -43,6 +43,7 @@ function Game(props) {
   });
   return (
     <div className="columns">
+      {/* left column */}
       <div className="column">
         <div className="notification is-black" style={{ border: "3px solid" }}>
           <p>メンバー</p>
@@ -53,10 +54,7 @@ function Game(props) {
                 return <p key={member.name}>{member.name}</p>;
               } else {
                 return (
-                  <p
-                    key={member.name}
-                    style={{ color: "gray" }}
-                  >
+                  <p key={member.name} style={{ color: "gray" }}>
                     {member.name}
                   </p>
                 );
@@ -65,13 +63,14 @@ function Game(props) {
           </div>
         </div>
       </div>
+      {/* right column */}
       <div className="column">
         <div className="notification is-black" style={{ border: "3px solid" }}>
           <p>チャット</p>
           <hr />
           <div id="chat" style={{ maxHeight: "500px", overflow: "auto" }}>
             {messages.messages.map((msg) => {
-              if (msg.type === "important") {
+              if (msg.type === "notification") {
                 return (
                   <div
                     className="notification is-primary is-light my-1"

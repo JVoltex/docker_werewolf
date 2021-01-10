@@ -2,10 +2,10 @@
 const {
   sleep,
   mayor,
-  notify,
-  message,
+  note,
+  info,
+  plainMessage,
   mode,
-  message_base,
   randomSort,
 } = require("./utils");
 
@@ -49,7 +49,7 @@ class Game {
     for (const i of this.members) {
       i.job = jobs.pop();
     }
-    this.members.map((x) => notify(x.socket, `あなたは【${x.job}】です。`));
+    this.members.map((x) => note(x.socket, `あなたは【${x.job}】です。`));
     this._sendMemberInfo();
     this.previous = this.next;
     this.next = "judge";
@@ -60,10 +60,10 @@ class Game {
     const n_alive_wolf = this.members.filter((x) => x.alive && x.job === "人狼")
       .length;
     if (n_alive_wolf / n_alive >= 0.5) {
-      this._broadcast("人狼の勝利です", notify);
+      this._broadcast("人狼の勝利です", note);
       this.next = "done";
     } else if (n_alive_wolf === 0) {
-      this._broadcast("市民の勝利です", notify);
+      this._broadcast("市民の勝利です", note);
       this.next = "done";
     } else {
       this.next = this.previous === "day" ? "night" : "day";
@@ -115,7 +115,7 @@ class Game {
     if (protectedMembers.indexOf(victim) === -1) {
       this._kill(victim);
     } else {
-      this._broadcast("誰も死にませんでした。", notify);
+      this._broadcast("誰も死にませんでした。", note);
     }
     this.previous = this.next;
     this.next = "judge";
@@ -138,7 +138,7 @@ class Game {
       x.receiveMemberInfo(this.members);
     });
   }
-  _broadcast(msg, func = message, job, alive) {
+  _broadcast(msg, func = info, job, alive) {
     const targets = this._filterMembers(job, alive);
     targets.map((x) => {
       func(x.socket, msg);
@@ -146,7 +146,7 @@ class Game {
   }
   _kill(member) {
     member.alive = false;
-    this._broadcast(`【${member.name}】が死亡しました`, notify);
+    this._broadcast(`【${member.name}】が死亡しました`, note);
     this._sendMemberInfo();
   }
   _startChat(job = null) {
@@ -154,7 +154,7 @@ class Game {
     members.map((x) =>
       x.socket.on("clientMessage", (msg) => {
         if (msg.match(/[^0-9]/))
-          members.map((y) => message_base(y.socket, `${x.name}「${msg}`));
+          members.map((y) => plainMessage(y.socket, `${x.name}「${msg}`));
       })
     );
   }
@@ -171,16 +171,16 @@ class Game {
     const validId = objects.map((x, i) => i);
     // when there is no choice
     if (objects.length === 0) {
-      message(subject.socket, "少々お待ちください...");
+      info(subject.socket, "少々お待ちください...");
       return Promise.resolve(null);
     }
     // when there are some choices
-    message(subject.socket, prompt);
-    objects.map((x, i) => message(subject.socket, `${i}: ${x.name}`));
+    info(subject.socket, prompt);
+    objects.map((x, i) => info(subject.socket, `${i}: ${x.name}`));
     return new Promise((resolve, reject) => {
       subject.socket.on("clientMessage", (msg) => {
         if (validId.indexOf(Number(msg)) !== -1) {
-          message(subject.socket, "選択を受け付けました。");
+          info(subject.socket, "選択を受け付けました。");
           if (this.next === "night") subject.nightAction(objects[Number(msg)]);
           subject.socket.removeAllListeners("clientMessage");
           resolve(objects[Number(msg)]);

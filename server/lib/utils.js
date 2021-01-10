@@ -8,24 +8,24 @@ module.exports.sleep = (sec = 1) => {
   });
 };
 
-const message_base = (socket, msg, type = "plain") => {
+const plainMessage = (socket, msg, type = "plain") => {
   socket.emit("serverMessage", {
     type: type,
     text: msg,
   });
 };
-module.exports.message_base = message_base;
+module.exports.plainMessage = plainMessage;
 
 module.exports.mayor = (socket, msg) => {
-  message_base(socket, `村長「${msg}`, "plain");
+  plainMessage(socket, `村長「${msg}`, "plain");
 };
 
-module.exports.notify = (socket, msg) => {
-  message_base(socket, `${msg}`, "important");
+module.exports.note = (socket, msg) => {
+  plainMessage(socket, `${msg}`, "notification");
 };
 
-module.exports.message = (socket, msg) => {
-  message_base(socket, `『${msg}`, "plain");
+module.exports.info = (socket, msg) => {
+  plainMessage(socket, `『${msg}`, "plain");
 };
 
 module.exports.mode = (ary) => {
