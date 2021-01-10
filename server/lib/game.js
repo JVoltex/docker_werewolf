@@ -10,33 +10,20 @@ const {
 } = require("./utils");
 
 class Game {
-  constructor(members, assign, timeLimit = 5) {
+  constructor(members, assign, server, timeLimit = 5) {
     this.members = members;
     this.assign = assign;
-    this.next = "prepare";
-    this.previous = null;
+    this.next = this.prepare;
+    this.current = null;
     this.timeLimit = timeLimit;
   }
   // controll method
   async proceed() {
-    switch (this.next) {
-      case "prepare":
-        this.prepare();
-        break;
-      case "judge":
-        this._judge();
-        break;
-      case "day":
-        await this.day();
-        break;
-      case "night":
-        await this.night();
-        break;
-      default:
-        throw Error("default");
-    }
+    await this.next();
+    return;
   }
-  prepare() {
+  async prepare() {
+    this.current = this.next;
     let jobs = [];
     for (const [k, v] of Object.entries(this.assign)) {
       for (let i = 0; i < v; i++) jobs.push(k);
@@ -46,37 +33,40 @@ class Game {
       i.job = jobs.pop();
     }
     this.members.map((x) => note(x.socket, `あなたは【${x.job}】です。`));
+    this._filterMembers((x) => x.job === "人狼").map((x) => {
+      x.socket.join("人狼");
+    });
     this._sendMemberInfo();
-    this.previous = this.next;
-    this.next = "judge";
+    this.next = this.judge;
     return;
   }
-  _judge() {
-    const n_alive = this.members.filter((x) => x.alive).length;
-    const n_alive_wolf = this.members.filter((x) => x.alive && x.job === "人狼")
+  async judge() {
+    const prev = this.current;
+    this.current = this.next;
+    const n_alive = this._filterMembers((x) => x.alive).length;
+    const n_alive_wolf = this._filterMembers((x) => x.alive && x.job === "人狼")
       .length;
     if (n_alive_wolf / n_alive >= 0.5) {
       this._broadcast("人狼の勝利です", note);
-      this.next = "done";
+      this.next = null;
     } else if (n_alive_wolf === 0) {
       this._broadcast("市民の勝利です", note);
-      this.next = "done";
+      this.next = null;
     } else {
-      this.next = this.previous === "day" ? "night" : "day";
+      this.next = prev === this.day ? this.night : this.day;
     }
-    this.previous = "judge";
     return;
   }
   async day() {
+    this.current = this.next;
     this._broadcast("さてさて昼が来たぞ。", mayor);
     this._broadcast(
       `日が沈むまでの${this.timeLimit}秒間で人狼を暴くのじゃ。`,
       mayor
     );
-    await this._chat((x) => true);
+    await Promise.all([this._chat((x) => x.alive), this.chat((x) => !x.alive)]);
     this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
-    const alive_members = this.members.filter((x) => x.alive);
-    const res = await this._waitForChoice(
+    const res = await this._waitForChoices(
       "誰が人狼だと思いますか。",
       (x) => x.alive,
       (x) => x.alive,
@@ -84,11 +74,11 @@ class Game {
     );
     const victim = mode(res);
     this._kill(victim);
-    this.previous = this.next;
-    this.next = "judge";
+    this.next = this.judge;
     return;
   }
   async night() {
+    this.current = this.next;
     this._broadcast("夜が来たぞ。どうも嫌な予感がするわい。", mayor);
     this._broadcast(
       `日が昇るまで${this.timeLimit}秒ほど用心するのじゃ。`,
@@ -97,11 +87,14 @@ class Game {
     );
     this._broadcast(
       `${this.timeLimit}秒で襲撃対象を相談してください`,
-      mayor,
+      info,
       (x) => x.job === "人狼"
     );
-    await this._chat((x) => x.job === "人狼");
-    const res = await this._waitForNightChoice();
+    await Promise.all([
+      this._chat((x) => x.alive && x.job === "人狼"),
+      this.chat((x) => !x.alive),
+    ]);
+    const res = await this._waitForNightChoices();
     const victim = mode(res[0]);
     const protectedMembers = res[1];
     if (protectedMembers.indexOf(victim) === -1) {
@@ -109,8 +102,7 @@ class Game {
     } else {
       this._broadcast("誰も死にませんでした。", note);
     }
-    this.previous = this.next;
-    this.next = "judge";
+    this.next = this.judge;
     return;
   }
   // utils
@@ -123,7 +115,7 @@ class Game {
     });
   }
   _broadcast(msg, msgFunc = info, filterFunc) {
-    if (!filterFunc) filterFunc = (x) => true
+    if (!filterFunc) filterFunc = (x) => true;
     const targets = this._filterMembers(filterFunc);
     targets.map((x) => {
       msgFunc(x.socket, msg);
@@ -132,9 +124,17 @@ class Game {
   _kill(member) {
     member.alive = false;
     this._broadcast(`【${member.name}】が死亡しました`, note);
+    member.socket.join("死亡");
     this._sendMemberInfo();
   }
-  _startChat(filterFunc) {
+  _startChat() {
+    for (m of this.members) {
+      if (m.socket.rooms.has("死亡")) {
+        m.socket.on("clientMessage", (msg) => {
+          io
+        })
+      }
+    }
     const members = this._filterMembers(filterFunc);
     members.map((x) =>
       x.socket.on("clientMessage", (msg) => {
@@ -144,14 +144,16 @@ class Game {
     );
   }
   _stopChat() {
-    this.members.map((x) => x.socket.removeAllListeners("clientMessage"));
+    const members = this._filterMembers(filterFunc);
+    members.map((x) => x.socket.removeAllListeners("clientMessage"));
   }
-  async _chat(filterFunc) {
-    this._startChat(filterFunc);
-    await sleep(this.timeLimit);
+  async _chat() {
+    // have to fix
+    this._startChat();
+    await sleep();
     this._stopChat();
   }
-  _choice(prompt, subject, objects) {
+  _waitForSingleChoice(prompt, subject, objects) {
     objects = objects.filter((x) => x !== subject);
     const validId = objects.map((x, i) => i);
     // when there is no choice
@@ -166,18 +168,20 @@ class Game {
       subject.socket.on("clientMessage", (msg) => {
         if (validId.indexOf(Number(msg)) !== -1) {
           info(subject.socket, "選択を受け付けました。");
-          if (this.next === "night") subject.nightAction(objects[Number(msg)]);
-          subject.socket.removeAllListeners("clientMessage");
+          if (this.current === this.night)
+            subject.nightAction(objects[Number(msg)]);
           resolve(objects[Number(msg)]);
         }
       });
+    }).finally(() => {
+      subject.socket.removeAllListeners("clientMessage");
     });
   }
-  async _waitForChoice(prompt, filterFuncS, filterFuncO, broadcast) {
+  async _waitForChoices(prompt, filterFuncS, filterFuncO, broadcast) {
     const subjects = this._filterMembers(filterFuncS);
     const objects = this._filterMembers(filterFuncO);
     const choices = await Promise.all(
-      subjects.map((x) => this._choice(prompt, x, objects))
+      subjects.map((x) => this._waitForSingleChoice(prompt, x, objects))
     );
     if (broadcast) {
       for (let i = 0; i < subjects.length; i++) {
@@ -186,24 +190,24 @@ class Game {
     }
     return choices;
   }
-  async _waitForNightChoice() {
+  async _waitForNightChoices() {
     const res = await Promise.all([
-      this._waitForChoice(
+      this._waitForChoices(
         "誰を襲いますか。",
         (x) => x.job === "人狼",
         (x) => x.alive
       ),
-      this._waitForChoice(
+      this._waitForChoices(
         "誰を守りますか。",
         (x) => x.job === "狩人",
         (x) => x.alive
       ),
-      this._waitForChoice(
+      this._waitForChoices(
         "誰を占いますか。",
         (x) => x.job === "占い師",
         (x) => x.alive
       ),
-      this._waitForChoice(
+      this._waitForChoices(
         "誰の霊と語りますか。",
         (x) => x.job === "霊媒師",
         (x) => !x.alive

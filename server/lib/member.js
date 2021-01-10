@@ -1,5 +1,5 @@
 "use strict";
-const {info} = require("./utils")
+const { info } = require("./utils");
 
 class Member {
   constructor(name, socket) {
@@ -8,14 +8,17 @@ class Member {
     this.job = null;
     this.socket = socket;
   }
-  formatForClient() {
-    return { name: this.name, alive: this.alive };
+  receiveMemberInfo(members) {
+    this.socket.emit(
+      "serverMemberInfo",
+      members.map((x) => this._formatMemberInfo(x))
+    );
   }
-  formatMemberInfo(member) {
-    const res = { name: null, alive: null };
+  _formatMemberInfo(member) {
+    const res = {};
     res.name = member.name;
     res.alive = member.alive;
-    if (this.job === "人狼" && member.job === "人狼") {
+    if (this.job === "人狼" && member.job === "人狼" && member !== this) {
       res.name = res.name + "（人狼）";
     }
     if (member === this) {
@@ -23,32 +26,25 @@ class Member {
     }
     return res;
   }
-  receiveMemberInfo(members) {
-    this.socket.emit(
-      "serverMemberInfo",
-      members.map((x) => this.formatMemberInfo(x))
-    );
-  }
   nightAction(choice) {
-    let msg
+    let msg;
     switch (this.job) {
       case "霊媒師":
         if (choice.job === "人狼") {
-          msg = `【${choice.name}】は人狼です。`
+          msg = `【${choice.name}】は人狼です。`;
         } else {
-          msg = `【${choice.name}】は人狼ではありません。`
+          msg = `【${choice.name}】は人狼ではありません。`;
         }
-        info(this.socket, msg)
         break;
       case "占い師":
         if (choice.job === "人狼") {
-          msg = `【${choice.name}】は人狼です。`
+          msg = `【${choice.name}】は人狼です。`;
         } else {
-          msg = `【${choice.name}】は人狼ではありません。`
+          msg = `【${choice.name}】は人狼ではありません。`;
         }
-        info(this.socket, msg)
         break;
     }
+    info(this.socket, msg);
   }
 }
 module.exports = Member;
