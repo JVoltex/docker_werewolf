@@ -57,15 +57,12 @@ module.exports.playGame = async (assign, server, timeLimit) => {
 module.exports.inputAssign = async (jobs) => {
   const inputs = []
   for (const j of jobs) {
-    const n = await inputNaturalNumber(`【${j}】は何人？（半角数字）：`)
+    const n = await inputNaturalNumber(`【${j}】は何人？：`)
     inputs.push(n)
   }
   const res = {}
   for (let i = 0; i < jobs.length; i++) {
     res[jobs[i]] = inputs[i]
   }
-  console.log("以下の設定でゲームを開始します。")
-  console.log("ブラウザからアクセスしてください。")
-  console.log(res)
   return res
 }

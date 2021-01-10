@@ -61,10 +61,10 @@ module.exports.inputNaturalNumber = (prompt) => {
     rl.on("line", (input) => {
       const n = Number(input)
       if (Number.isInteger(n) && 1 <= n) {
-        console.log("1以上の整数を半角で入力してください。")
-      } else {
         resolve(n)
         rl.close()
+      } else {
+        console.log("1以上の整数を半角で入力してください。")
       }
     })
   })
