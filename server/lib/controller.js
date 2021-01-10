@@ -1,5 +1,5 @@
 "use strict";
-// this module is imoprted only by `server.js`
+// this module is imoprted only by `main.js`
 const Member = require("./member");
 const Game = require("./game");
 const { Server } = require("socket.io");
@@ -13,18 +13,17 @@ const waitForMembers = (n, server) => {
     server.ws.on("connection", (socket) => {
       socket.on("clientMemberJoin", (name) => {
         members.push(new Member(name, socket));
-        members.map((x, i, ary) => {
-          x.receiveMemberInfo(ary)
-        });
+        members.map((x) => x.receiveMemberInfo(members));
         mayor(socket, `ようこそ【${name}】さん。`);
         mayor(socket, `皆が揃うまでしばし待たれよ。`);
-        console.log(`memberJoin: ${name}`);
+        console.log(`【${name}】さんが入室しました。`);
         if (members.length === n) {
-          members.map((x) => x.socket.removeAllListeners("clientMemberJoin"));
           resolve(members);
         }
       });
     });
+  }).finally(() => {
+    members.map((x) => x.socket.removeAllListeners("clientMemberJoin"));
   });
 };
 
@@ -45,7 +44,7 @@ module.exports.GameServer = class GameServer {
   }
 };
 
-module.exports.playGame = async (assign, server, timeLimit) => {
+module.exports.playGame = async (assign, timeLimit, server) => {
   const n = Object.values(assign).reduce((sum, n) => (sum += n), 0);
   const members = await waitForMembers(n, server);
   const game = new Game(members, assign, timeLimit);
@@ -55,14 +54,14 @@ module.exports.playGame = async (assign, server, timeLimit) => {
 };
 
 module.exports.inputAssign = async (jobs) => {
-  const inputs = []
+  const inputs = [];
   for (const j of jobs) {
-    const n = await inputNaturalNumber(`【${j}】は何人？：`)
-    inputs.push(n)
+    const n = await inputNaturalNumber(`【${j}】は何人？：`);
+    inputs.push(n);
   }
-  const res = {}
+  const res = {};
   for (let i = 0; i < jobs.length; i++) {
-    res[jobs[i]] = inputs[i]
+    res[jobs[i]] = inputs[i];
   }
-  return res
-}
+  return res;
+};

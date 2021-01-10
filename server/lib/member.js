@@ -25,7 +25,7 @@ class Member {
   }
   receiveMemberInfo(members) {
     this.socket.emit(
-      "serverMemberJoin",
+      "serverMemberInfo",
       members.map((x) => this.formatMemberInfo(x))
     );
   }

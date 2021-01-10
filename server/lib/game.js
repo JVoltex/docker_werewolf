@@ -203,8 +203,8 @@ class Game {
   }
   async _waitForNightChoice() {
     const res = await Promise.all([
-      this._waitForChoice("誰を守りますか。", "狩人", [true], null, [true]),
       this._waitForChoice("誰を襲いますか。", "人狼", [true], null, [true]),
+      this._waitForChoice("誰を守りますか。", "狩人", [true], null, [true]),
       this._waitForChoice("誰を占いますか。", "占い師", [true], null, [true]),
       this._waitForChoice("誰の霊と語りますか。", "霊媒師", [true], null, [
         false,

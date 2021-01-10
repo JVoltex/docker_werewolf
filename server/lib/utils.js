@@ -1,10 +1,10 @@
 "use strict";
-// this module should not depend on any othe modules
+// this module should not depend on any other modules
 const readline = require("readline");
 
 module.exports.sleep = (sec = 1) => {
   return new Promise((resolve, reject) => {
-    setTimeout(() => resolve("time"), sec * 1000);
+    setTimeout(resolve, sec * 1000);
   });
 };
 
@@ -29,7 +29,7 @@ module.exports.message = (socket, msg) => {
 };
 
 module.exports.mode = (ary) => {
-  let mode = null;
+  let mode;
   let count = 0;
   for (const i of new Set(ary)) {
     const c = ary.filter((x) => x === i).length;
@@ -51,21 +51,22 @@ module.exports.randomSort = (ary) => {
 };
 
 module.exports.inputNaturalNumber = (prompt) => {
-  console.log(prompt)
+  console.log(prompt);
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-  })
-  rl.setPrompt("")
+  });
+  rl.setPrompt("");
   return new Promise((resolve, reject) => {
     rl.on("line", (input) => {
-      const n = Number(input)
+      const n = Number(input);
       if (Number.isInteger(n) && 1 <= n) {
-        resolve(n)
-        rl.close()
+        resolve(n);
       } else {
-        console.log("1以上の整数を半角で入力してください。")
+        console.log("1以上の整数を半角で入力してください。");
       }
-    })
-  })
+    });
+  }).finally(() => {
+    rl.close();
+  });
 };

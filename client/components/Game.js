@@ -29,11 +29,11 @@ function Game(props) {
     const membersCallback = (members) => {
       membersDispatch({ type: members });
     };
-    socket.on("serverMemberJoin", membersCallback);
+    socket.on("serverMemberInfo", membersCallback);
     socket.emit("clientMemberJoin", props.name);
     return () => {
       socket.removeListener("serverMessage", messageCallback);
-      socket.removeListener("serverMemberJoin", membersCallback);
+      socket.removeListener("serverMemberInfo", membersCallback);
     };
   }, []);
   useEffect(() => {

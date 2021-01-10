@@ -7,7 +7,7 @@ const playGameOnce = async (jobs, port, staticDir="../client/out/") => {
   console.log("設定完了です。ブラウザからアクセスしてください。")
   const server = new GameServer(staticDir, port)
   server.start();
-  await playGame(assign, server, timeLimit);
+  await playGame(assign, timeLimit, server);
   server.close()
 }
 
