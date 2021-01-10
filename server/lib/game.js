@@ -49,7 +49,6 @@ class Game {
     for (const i of this.members) {
       i.job = jobs.pop();
     }
-    this.members.map((x) => console.log(`${x.name}: ${x.job}`)); // debag
     this.members.map((x) => notify(x.socket, `あなたは【${x.job}】です。`));
     this._sendMemberInfo();
     this.previous = this.next;

@@ -50,7 +50,7 @@ module.exports.randomSort = (ary) => {
   return aryWithRand.map((x) => x.value);
 };
 
-module.exports.inputInt = (prompt) => {
+module.exports.inputNaturalNumber = (prompt) => {
   console.log(prompt)
   const rl = readline.createInterface({
     input: process.stdin,
@@ -59,10 +59,11 @@ module.exports.inputInt = (prompt) => {
   rl.setPrompt("")
   return new Promise((resolve, reject) => {
     rl.on("line", (input) => {
-      if (Object.is(Number(input), NaN)) {
-        console.log("半角数字で入力してください。")
+      const n = Number(input)
+      if (Number.isInteger(n) && 1 <= n) {
+        console.log("1以上の整数を半角で入力してください。")
       } else {
-        resolve(Math.floor(Number(input)))
+        resolve(n)
         rl.close()
       }
     })

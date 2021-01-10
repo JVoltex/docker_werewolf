@@ -11,4 +11,7 @@ WORKDIR /build/server
 COPY ./server/package*.json ./
 RUN npm ci
 COPY ./server .
+ENV UID="5000"
+RUN adduser -D "master" --u $UID
+USER $UID
 CMD ["npm", "start"]
