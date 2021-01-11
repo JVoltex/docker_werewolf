@@ -171,7 +171,7 @@ class Game {
       return Promise.resolve(null);
     }
     // when there are some choices
-    info(subject.socket, prompt);
+    info(subject.socket, `${prompt}（半角数字）`);
     objects.map((x, i) => clickable(subject.socket, `${i}: ${x.name}`, i));
     return new Promise((resolve, reject) => {
       subject.socket.on("clientMessage", (msg) => {
