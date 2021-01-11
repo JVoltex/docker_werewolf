@@ -89,6 +89,7 @@ class Game {
       (x) => x.job === "人狼"
     );
     await this._chat();
+    this._broadcast("もう少しの辛抱じゃ", mayor);
     const res = await this._waitForNightChoices();
     const victim = mode(res[0]);
     const protectedMembers = res[1];
