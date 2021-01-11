@@ -6,6 +6,7 @@ const {
   info,
   plainMessage,
   mode,
+  clickable,
   randomSort,
 } = require("./utils");
 
@@ -168,7 +169,7 @@ class Game {
     }
     // when there are some choices
     info(subject.socket, prompt);
-    objects.map((x, i) => info(subject.socket, `${i}: ${x.name}`));
+    objects.map((x, i) => clickable(subject.socket, `${i}: ${x.name}`, i));
     return new Promise((resolve, reject) => {
       subject.socket.on("clientMessage", (msg) => {
         if (validId.indexOf(Number(msg)) !== -1) {

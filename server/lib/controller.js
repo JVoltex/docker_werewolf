@@ -5,7 +5,7 @@ const Game = require("./game");
 const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
-const { mayor, inputNaturalNumber } = require("./utils");
+const { mayor, inputNonNegativeInteger } = require("./utils");
 
 const waitForMembers = (n, server) => {
   const members = [];
@@ -56,7 +56,7 @@ module.exports.playGame = async (assign, timeLimit, server) => {
 module.exports.inputAssign = async (jobs) => {
   const inputs = [];
   for (const j of jobs) {
-    const n = await inputNaturalNumber(`【${j}】は何人？：`);
+    const n = await inputNonNegativeInteger(`【${j}】は何人？：`);
     inputs.push(n);
   }
   const res = {};

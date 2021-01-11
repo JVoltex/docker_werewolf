@@ -1,5 +1,5 @@
 "use strict";
-// this module should not depend on any other modules
+// this module should not depend on any other local modules
 const readline = require("readline");
 
 module.exports.sleep = (sec = 1) => {
@@ -8,10 +8,11 @@ module.exports.sleep = (sec = 1) => {
   });
 };
 
-const plainMessage = (socket, msg, type = "plain") => {
+const plainMessage = (socket, msg, type = "plain", value) => {
   socket.emit("serverMessage", {
     type: type,
     text: msg,
+    value: value,
   });
 };
 module.exports.plainMessage = plainMessage;
@@ -26,6 +27,10 @@ module.exports.note = (socket, msg) => {
 
 module.exports.info = (socket, msg) => {
   plainMessage(socket, `『${msg}`, "plain");
+};
+
+module.exports.clickable = (socket, msg, value) => {
+  plainMessage(socket, `『${msg}`, "clickable", value);
 };
 
 module.exports.mode = (ary) => {
@@ -50,7 +55,7 @@ module.exports.randomSort = (ary) => {
   return aryWithRand.map((x) => x.value);
 };
 
-module.exports.inputNaturalNumber = (prompt) => {
+module.exports.inputNonNegativeInteger = (prompt) => {
   console.log(prompt);
   const rl = readline.createInterface({
     input: process.stdin,
@@ -60,10 +65,10 @@ module.exports.inputNaturalNumber = (prompt) => {
   return new Promise((resolve, reject) => {
     rl.on("line", (input) => {
       const n = Number(input);
-      if (Number.isInteger(n) && 1 <= n) {
+      if (Number.isInteger(n) && 0 <= n && input !== "") {
         resolve(n);
       } else {
-        console.log("1以上の整数を半角で入力してください。");
+        console.log("0以上の整数を半角で入力してください。");
       }
     });
   }).finally(() => {

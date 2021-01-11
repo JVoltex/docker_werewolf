@@ -3,9 +3,9 @@ import { useContext } from "react";
 import { SocketContext, PhaseDispatch, NameDispatch } from "./Wrapper";
 
 function Welcome() {
-  const phaseDispatch = useContext(PhaseDispatch)
-  const nameDispatch = useContext(NameDispatch)
-  const socket = useContext(SocketContext)
+  const phaseDispatch = useContext(PhaseDispatch);
+  const nameDispatch = useContext(NameDispatch);
+  const socket = useContext(SocketContext);
   return (
     <div className="columns is-vcentered">
       <div className="column is-8">
@@ -19,8 +19,12 @@ function Welcome() {
           prompt="名前"
           button="けってい"
           onSubmit={(name) => {
-            nameDispatch({ type: name });
-            phaseDispatch({ type: "game" });
+            if (name !== "") {
+              nameDispatch({ type: name });
+              phaseDispatch({ type: "game" });
+            } else {
+              alert("村長「こら、ちゃんと名乗れ！");
+            }
           }}
         />
       </div>

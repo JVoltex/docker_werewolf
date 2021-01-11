@@ -17,11 +17,17 @@ function Game(props) {
   const [members, membersDispatch] = useReducer(membersReducer, {
     members: [props.name],
   });
+  const handleClickChoice = (e) => {
+    const choice = e.target.dataset.id;
+    console.log(choice)
+    const textarea = document.getElementById("textarea");
+    textarea.value = choice;
+  };
   useEffect(() => {
     // handling message
     const messageCallback = (msg) => {
       messagesDispatch({
-        type: { type: msg.type, text: msg.text, timestamp: `${Date.now()}` },
+        type: { type: msg.type, text: msg.text, timestamp: `${Date.now()}`, value: msg.value},
       });
     };
     socket.on("serverMessage", messageCallback);
@@ -80,7 +86,22 @@ function Game(props) {
                   </div>
                 );
               } else if (msg.type === "dead") {
-                return <p key={msg.timestamp} style={{ color: "gray" }}>=>{msg.text}</p>;
+                return (
+                  <p key={msg.timestamp} style={{ color: "gray" }}>
+                    {msg.text}
+                  </p>
+                );
+              } else if (msg.type === "clickable") {
+                return (
+                  <p
+                    key={msg.timestamp}
+                    onClick={handleClickChoice}
+                    style={{ cursor: "pointer" }}
+                    data-id={msg.value}
+                  >
+                    {msg.text}
+                  </p>
+                );
               } else {
                 return <p key={msg.timestamp}>{msg.text}</p>;
               }
