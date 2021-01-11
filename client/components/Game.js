@@ -111,7 +111,7 @@ function Game(props) {
             prompt="メッセージ"
             button="▶おくる"
             onSubmit={(msg) => {
-              socket.emit("clientMessage", msg);
+              if (msg !== "") socket.emit("clientMessage", msg);
             }}
           />
         </div>

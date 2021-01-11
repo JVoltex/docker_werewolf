@@ -133,8 +133,11 @@ class Game {
         m.socket.on("clientMessage", (msg) => {
           this._filterMembers((x) => x.job === "人狼").map((x) => {
             plainMessage(x.socket, `${m.name}「${msg}`);
+          }); // only to wolf
+          this._filterMembers((x) => x.job !== "人狼").map((x) => {
+            plainMessage(x.socket, `？？「ガルルル`);
           });
-        }); // only to wolf
+        });
       } else if (this.current === this.night) {
         m.socket.on("clientMessage", (msg) => {
           this.members.map((x) => {
@@ -200,22 +203,22 @@ class Game {
     const res = await Promise.all([
       this._waitForChoices(
         "誰を襲いますか。",
-        (x) => x.job === "人狼",
-        (x) => x.alive
+        (x) => x.job === "人狼" && x.alive,
+        (x) => x.alive && x.job !== "人狼"
       ),
       this._waitForChoices(
         "誰を守りますか。",
-        (x) => x.job === "狩人",
+        (x) => x.job === "狩人" && x.alive,
         (x) => x.alive
       ),
       this._waitForChoices(
         "誰を占いますか。",
-        (x) => x.job === "占い師",
+        (x) => x.job === "占い師" && x.alive,
         (x) => x.alive
       ),
       this._waitForChoices(
         "誰の霊と語りますか。",
-        (x) => x.job === "霊媒師",
+        (x) => x.job === "霊媒師" && x.alive,
         (x) => !x.alive
       ),
     ]);
