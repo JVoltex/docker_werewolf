@@ -1,3 +1,5 @@
+⚠️ メンテナンスやGitHub Container Registryでのイメージ配布をやめます。使ってくださった方、ありがとうございました。
+
 # dr666m1/werewolf
 <img src="https://user-images.githubusercontent.com/26474260/104125977-64bcd580-539d-11eb-969a-8562af25f897.png" width=800px>
 
