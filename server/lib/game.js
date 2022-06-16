@@ -8,6 +8,7 @@ const {
   mode,
   clickable,
   randomSort,
+  getRandomIntInclusive,
 } = require("./utils");
 
 class Game {
@@ -25,13 +26,54 @@ class Game {
   }
   async prepare() {
     this.current = this.next;
-    let jobs = [];
-    for (const [k, v] of Object.entries(this.assign)) {
-      for (let i = 0; i < v; i++) jobs.push(k);
+    if(true) {
+      console.log(this.members.length);
+      this.members.sort((a, b) => a.answer - b.answer);
+      console.log(this.members.length);
+      const n = this.assign["人狼"];
+      console.log(n);
+      let tmpRanks = Array.from(Array(this.members.length), (v, k) => k);
+      tmpRanks = randomSort(tmpRanks);
+      console.log(tmpRanks);
+      const werewolfRanks = [];
+      console.log(this.members);
+      for (let i = 0; i < n; i++) {
+        let werewolfRank = tmpRanks[i];
+        
+        this.members[werewolfRank].job = "人狼";
+        werewolfRanks.push(werewolfRank);
+      }
+      
+      console.log(this.members);
+            
+      this._broadcast(`人狼は次の順位の人です：${werewolfRanks}`, note);
+      
+      // 人狼以外をランダムに割り振る
+      let jobs = [];
+      for (const [k, v] of Object.entries(this.assign)) {
+        if(k!== "人狼") {
+          for (let i = 0; i < v; i++) jobs.push(k);
+        }
+      }
+      jobs = randomSort(jobs);
+      console.log(jobs);
+      for (const i of this.members) {
+        if(i.job === null) {
+          console.log(i);
+          i.job = jobs.pop();
+        }
+      }
+
     }
-    jobs = randomSort(jobs);
-    for (const i of this.members) {
-      i.job = jobs.pop();
+    else {
+      let jobs = [];
+      for (const [k, v] of Object.entries(this.assign)) {
+        for (let i = 0; i < v; i++) jobs.push(k);
+      }
+      jobs = randomSort(jobs);
+      for (const i of this.members) {
+        i.job = jobs.pop();
+      }
     }
     this.members.map((x) => note(x.socket, `あなたは【${x.job}】です。`));
     this._sendMemberInfo();

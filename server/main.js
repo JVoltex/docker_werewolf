@@ -1,13 +1,14 @@
-const { GameServer, playGame, inputAssign } = require("./lib/controller");
+const { GameServer, playGame, inputAssign, inputQuestionnaire} = require("./lib/controller");
 const { inputNonNegativeInteger } = require("./lib/utils");
 
 const playGameOnce = async (jobs, port, staticDir="../client/out/") => {
+  const questionnaire = await inputQuestionnaire("質問：")
   const assign = await inputAssign(jobs)
   const timeLimit = await inputNonNegativeInteger("相談時間は何秒？：")
   console.log("設定完了です。ブラウザからアクセスしてください。")
   const server = new GameServer(staticDir, port)
   server.start();
-  await playGame(assign, timeLimit, server);
+  await playGame(assign, timeLimit, server, questionnaire);
   server.close()
 }
 

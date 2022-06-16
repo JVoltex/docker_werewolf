@@ -55,6 +55,13 @@ module.exports.randomSort = (ary) => {
   return aryWithRand.map((x) => x.value);
 };
 
+// https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+module.exports.getRandomIntInclusive = (min, max) => {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1) + min); //The maximum is inclusive and the minimum is inclusive
+}
+
 module.exports.inputNonNegativeInteger = (prompt) => {
   console.log(prompt);
   const rl = readline.createInterface({
@@ -69,6 +76,26 @@ module.exports.inputNonNegativeInteger = (prompt) => {
         resolve(n);
       } else {
         console.log("0以上の整数を半角で入力してください。");
+      }
+    });
+  }).finally(() => {
+    rl.close();
+  });
+};
+
+module.exports.inputString = (prompt) => {
+  console.log(prompt);
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  rl.setPrompt("");
+  return new Promise((resolve, reject) => {
+    rl.on("line", (input) => {
+      if (input !== "") {
+        resolve(input);
+      } else {
+        console.log("文字列を入力してください。");
       }
     });
   }).finally(() => {
