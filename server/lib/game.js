@@ -46,7 +46,7 @@ class Game {
       
       console.log(this.members);
             
-      this._broadcast(`人狼は次の順位の人です：${werewolfRanks}`, note);
+      this._broadcast(`人狼は次の順位の人です：${werewolfRanks.map(r => r + 1)}`, note);
       
       // 人狼以外をランダムに割り振る
       let jobs = [];
@@ -63,6 +63,9 @@ class Game {
           i.job = jobs.pop();
         }
       }
+
+      // membersの順序でプレイヤに表示されるので、再度ランダムにしておく。
+      this.members = randomSort(this.members);
 
     }
     else {
