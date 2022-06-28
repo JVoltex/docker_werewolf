@@ -12,5 +12,5 @@ const playGameOnce = async (jobs, port, staticDir="../client/out/") => {
   server.close()
 }
 
-const jobs = ["人狼", "占い師", "霊媒師", "狩人", "狂人", "市民"]
+const jobs = ["人狼", "占い師", "霊媒師", "狩人", "パン屋", "狂人", "市民"]
 playGameOnce(jobs, 3000)
