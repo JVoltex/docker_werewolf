@@ -17,12 +17,7 @@ function Game(props) {
   const [members, membersDispatch] = useReducer(membersReducer, {
     members: [props.name],
   });
-  const handleClickChoice = (e) => {
-    const choice = e.target.dataset.id;
-    console.log(choice)
-    const textarea = document.getElementById("textarea");
-    textarea.value = choice;
-  };
+
   useEffect(() => {
     // handling message
     const messageCallback = (msg) => {
@@ -50,74 +45,108 @@ function Game(props) {
   return (
     <div className="columns">
       {/* left column */}
-      <div className="column">
-        <div className="notification is-black" style={{ border: "3px solid" }}>
-          <p>メンバー</p>
-          <hr />
-          <div style={{ maxHeight: "450px", overflow: "auto" }}>
-            {members.members.map((member) => {
-              if (member.alive) {
-                return <p key={member.name}>{member.name}</p>;
-              } else {
-                return (
-                  <p key={member.name} style={{ color: "gray" }}>
-                    {member.name}
-                  </p>
-                );
-              }
-            })}
-          </div>
-        </div>
-      </div>
+      <Members members={members} />
       {/* right column */}
-      <div className="column">
-        <div className="notification is-black" style={{ border: "3px solid" }}>
-          <p>チャット</p>
-          <hr />
-          <div id="chat" style={{ maxHeight: "500px", overflow: "auto" }}>
-            {messages.messages.map((msg) => {
-              if (msg.type === "notification") {
-                return (
-                  <div
-                    className="notification is-primary is-light my-1"
-                    key={msg.timestamp}
-                  >
-                    {msg.text}
-                  </div>
-                );
-              } else if (msg.type === "dead") {
-                return (
-                  <p key={msg.timestamp} style={{ color: "gray" }}>
-                    {msg.text}
-                  </p>
-                );
-              } else if (msg.type === "clickable") {
-                return (
-                  <p
-                    key={msg.timestamp}
-                    onClick={handleClickChoice}
-                    style={{ cursor: "pointer" }}
-                    data-id={msg.value}
-                  >
-                    {msg.text}
-                  </p>
-                );
-              } else {
-                return <p key={msg.timestamp}>{msg.text}</p>;
-              }
-            })}
-          </div>
-          <Input
-            prompt="メッセージ"
-            button="▶おくる"
-            onSubmit={(msg) => {
-              if (msg !== "") socket.emit("clientMessage", msg);
-            }}
-          />
+      <Chat messages={messages} />
+    </div>
+  );
+}
+
+export default Game;
+
+function Members(props) {
+  return (
+    <div className="column">
+      <div className="notification is-black" style={{ border: "3px solid" }}>
+        <p>メンバー</p>
+        <hr />
+        <div style={{ maxHeight: "450px", overflow: "auto" }}>
+          {props.members.members.map((member) => {
+            return <Member alive={member.alive} name={member.name} />;
+          })}
         </div>
       </div>
     </div>
   );
 }
 
-export default Game;
+function Member(props) {
+  if (props.alive) {
+    return <p key={props.name}>{props.name}</p>;
+  } else {
+    return (
+      <p key={props.name} style={{ color: "gray" }}>
+        {props.name}
+      </p>
+    );
+  } 
+}
+
+function Chat(props) {
+  const socket = useContext(SocketContext);
+  const messages = props.messages;
+  return (
+    <div className="column">
+      <div className="notification is-black" style={{ border: "3px solid" }}>
+        <p>チャット</p>
+        <hr />
+        <ChatHistory messages={messages}/>
+        <Input
+          prompt="メッセージ"
+          button="▶おくる"
+          onSubmit={(msg) => {
+            if (msg !== "") socket.emit("clientMessage", msg);
+          }}
+        />
+      </div>
+    </div>
+  );
+
+}
+
+function ChatHistory(props) {
+  const messages = props.messages;
+
+  const handleClickChoice = (e) => {
+    const choice = e.target.dataset.id;
+    console.log(choice)
+    const textarea = document.getElementById("textarea");
+    textarea.value = choice;
+  };
+
+  return (
+    <div id="chat" style={{ maxHeight: "500px", overflow: "auto" }}>
+    {messages.messages.map((msg) => {
+      if (msg.type === "notification") {
+        return (
+          <div
+            className="notification is-primary is-light my-1"
+            key={msg.timestamp}
+          >
+            {msg.text}
+          </div>
+        );
+      } else if (msg.type === "dead") {
+        return (
+          <p key={msg.timestamp} style={{ color: "gray" }}>
+            {msg.text}
+          </p>
+        );
+      } else if (msg.type === "clickable") {
+        return (
+          <p
+            key={msg.timestamp}
+            onClick={handleClickChoice}
+            style={{ cursor: "pointer" }}
+            data-id={msg.value}
+          >
+            {msg.text}
+          </p>
+        );
+      } else {
+        return <p key={msg.timestamp}>{msg.text}</p>;
+      }
+    })}
+    </div>
+  );
+}
