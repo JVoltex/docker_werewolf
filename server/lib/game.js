@@ -79,6 +79,8 @@ class Game {
       }
     }
     this.members.map((x) => note(x.socket, `あなたは【${x.job}】です。`));
+    const n_alive_wolf = this._filterMembers((x) => x.alive && x.job === "人狼")
+    n_alive_wolf.map((x) => note(x.socket, `${n_alive_wolf.map((x) => x.name).join()}が仲間ですよ。`));
     this._sendMemberInfo();
     this.next = this.judge;
     return;
