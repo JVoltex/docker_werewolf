@@ -5,14 +5,15 @@ const Game = require("./game");
 const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
-const { mayor, inputNonNegativeInteger, inputString } = require("./utils");
+const { mayor, inputNonNegativeInteger, inputString, informAssign } = require("./utils");
 
-const waitForMembers = (n, server, questionnaire) => {
+const waitForMembers = (n, server, assign, questionnaire) => {
   const members = [];
   return new Promise((resolve, reject) => {
     server.ws.on("connection", (socket) => {
       
       socket.on("clientMemberJoin", (name) => {
+        informAssign(socket, assign);
         members.push(new Member(name, socket));
         members.map((x) => x.receiveMemberInfo(members));
         mayor(socket, `ようこそ【${name}】さん。`);
@@ -72,7 +73,7 @@ module.exports.GameServer = class GameServer {
 
 module.exports.playGame = async (assign, timeLimit, server, questionnaire="") => {
   const nofmembers = Object.values(assign).reduce((sum, n) => (sum += n), 0);
-  const members = await waitForMembers(nofmembers, server, questionnaire);
+  const members = await waitForMembers(nofmembers, server, assign, questionnaire);
   await waitForAnswers(server, questionnaire, members);
   members.map((member) => mayor(member.socket,`回答：${member.answer}`) );
   

@@ -33,6 +33,11 @@ module.exports.clickable = (socket, msg, value) => {
   plainMessage(socket, `『${msg}`, "clickable", value);
 };
 
+module.exports.informAssign = (socket, msg) => {
+  socket.emit("serverAssignInfo", msg);
+};
+
+
 module.exports.mode = (ary) => {
   let mode;
   let count = 0;
@@ -102,3 +107,7 @@ module.exports.inputString = (prompt) => {
     rl.close();
   });
 };
+
+module.exports.formatAssignInfo = (one_assign) => {
+  return one_assign.key + ": " + one_assign.value + " 人";
+} 

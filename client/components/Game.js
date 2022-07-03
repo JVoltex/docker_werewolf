@@ -8,6 +8,9 @@ function messagesReducer(state, action) {
 function membersReducer(state, action) {
   return { members: action.type };
 }
+function assignsReducer(state, action) {
+  return action;
+}
 
 function Game(props) {
   const socket = useContext(SocketContext);
@@ -17,8 +20,16 @@ function Game(props) {
   const [members, membersDispatch] = useReducer(membersReducer, {
     members: [props.name],
   });
+  const [assigns, assignsDispatch] = useReducer(assignsReducer, {});
 
   useEffect(() => {
+    // handling assigns
+    const assignsCallback = (assigns) => {
+      console.log("on call back");
+      console.log(assigns);
+      assignsDispatch(assigns);
+    };
+    socket.on("serverAssignInfo", assignsCallback);
     // handling message
     const messageCallback = (msg) => {
       messagesDispatch({
@@ -33,6 +44,7 @@ function Game(props) {
     socket.on("serverMemberInfo", membersCallback);
     socket.emit("clientMemberJoin", props.name);
     return () => {
+      socket.removeListener("serverAssignInfo", assignsCallback);
       socket.removeListener("serverMessage", messageCallback);
       socket.removeListener("serverMemberInfo", membersCallback);
     };
@@ -43,20 +55,58 @@ function Game(props) {
     // https://stackoverflow.com/questions/270612/scroll-to-bottom-of-div
   });
   return (
-    <div className="columns">
-      {/* left column */}
-      <Members members={members} />
-      {/* right column */}
-      <Chat messages={messages} />
+    <div>
+      <div className="columns">
+        <div className="column">
+          <Assign assigns={assigns} />
+        </div>
+        <div className="column">
+          <Members members={members} />
+        </div>
+        <div className="column">
+          <Chat messages={messages} />
+        </div>
+      </div>
     </div>
   );
 }
 
 export default Game;
 
+function Assign(props) {
+  return (
+    <div className="notification is-black" style={{ border: "3px solid" }}>
+      <p>役職</p>
+      <hr />
+      {console.log("render assign")}
+      {console.log(props.assigns)}
+      <div style={{ maxHeight: "450px", overflow: "auto" }}>
+        <table class="table">
+          {(() => {
+            const items = [];
+            for (let key in props.assigns) {
+              if(props.assigns[key] === 0) {
+                continue;
+              }
+              items.push(
+                <tr>
+                  <th>{key}</th>
+                  <th>{props.assigns[key]}</th>
+                </tr>
+              );
+            }
+            return items;
+          })()}
+        </table>
+
+      </div>
+    </div>
+  );
+}
+
+
 function Members(props) {
   return (
-    <div className="column">
       <div className="notification is-black" style={{ border: "3px solid" }}>
         <p>メンバー</p>
         <hr />
@@ -64,7 +114,6 @@ function Members(props) {
           {props.members.members.map((member) => {
             return <Member alive={member.alive} name={member.name} />;
           })}
-        </div>
       </div>
     </div>
   );
@@ -86,7 +135,7 @@ function Chat(props) {
   const socket = useContext(SocketContext);
   const messages = props.messages;
   return (
-    <div className="column">
+
       <div className="notification is-black" style={{ border: "3px solid" }}>
         <p>チャット</p>
         <hr />
@@ -99,7 +148,7 @@ function Chat(props) {
           }}
         />
       </div>
-    </div>
+
   );
 
 }
