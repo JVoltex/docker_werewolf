@@ -111,14 +111,25 @@ class Game {
     );
     await this._chat();
     this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
-    const res = await this._waitForChoices(
+    let res = await this._waitForChoices(
       "誰が人狼だと思いますか。",
       (x) => x.alive,
       (x) => x.alive,
       true
     );
-    const victim = mode(res);
-    this._kill(victim);
+    let victim = this._mode(res);
+    if(victim.length > 1) {
+      this._broadcast("決まらなかったので決選投票を行うぞ。", mayor);
+      res = await this._waitForChoices(
+        "誰が人狼だと思いますか。",
+        (x) => x.alive & !victim.includes(x),
+        (x) => x.alive & victim.includes(x),
+        true
+      );
+      victim = this._mode(res);
+    }
+    victim = randomSort(victim);
+    this._kill(victim[0]);
     this.next = this.judge;
     return;
   }
@@ -148,6 +159,23 @@ class Game {
     this.next = this.judge;
     return;
   }
+
+  _mode(ary) {
+    let res = [];
+    let count = 0;
+    for (const i of new Set(ary)) {
+      const c = ary.filter((x) => x === i).length;
+      if (count <= c) {
+        if (count < c) {
+          res = [];
+        }
+        res.push(i);
+        count = c;
+      }
+    }
+    return res;
+  }
+
   // utils
   _filterMembers(func) {
     return this.members.filter(func);
