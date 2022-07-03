@@ -110,26 +110,7 @@ class Game {
       mayor
     );
     await this._chat();
-    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
-    let res = await this._waitForChoices(
-      "誰が人狼だと思いますか。",
-      (x) => x.alive,
-      (x) => x.alive,
-      true
-    );
-    let victim = this._mode(res);
-    if(victim.length > 1) {
-      this._broadcast("決まらなかったので決選投票を行うぞ。", mayor);
-      res = await this._waitForChoices(
-        "誰が人狼だと思いますか。",
-        (x) => x.alive & !victim.includes(x),
-        (x) => x.alive & victim.includes(x),
-        true
-      );
-      victim = this._mode(res);
-    }
-    victim = randomSort(victim);
-    this._kill(victim[0]);
+    await this._decide_executed();
     this.next = this.judge;
     return;
   }
@@ -157,6 +138,30 @@ class Game {
       this._broadcast("誰も死にませんでした。", note);
     }
     this.next = this.judge;
+    return;
+  }
+
+  async _decide_executed() {
+    this._broadcast("話し合いは十分だろう。さあ人狼を始末するのじゃ。", mayor);
+    let res = await this._waitForChoices(
+      "誰が人狼だと思いますか。",
+      (x) => x.alive,
+      (x) => x.alive,
+      true
+    );
+    let executed = this._mode(res);
+    if(executed.length > 1) {
+      this._broadcast("決まらなかったので決選投票を行うぞ。", mayor);
+      res = await this._waitForChoices(
+        "誰が人狼だと思いますか。",
+        (x) => x.alive & !executed.includes(x),
+        (x) => x.alive & executed.includes(x),
+        true
+      );
+      executed = this._mode(res);
+    }
+    executed = randomSort(executed);
+    this._kill(executed[0]);
     return;
   }
 
