@@ -33,7 +33,7 @@ function Game(props) {
     // handling message
     const messageCallback = (msg) => {
       messagesDispatch({
-        type: { type: msg.type, text: msg.text, timestamp: `${Date.now()}`, value: msg.value},
+        type: { type: msg.type, text: msg.text, timestamp: `${Date.now()}`, value: msg.value },
       });
     };
     socket.on("serverMessage", messageCallback);
@@ -85,7 +85,7 @@ function Assign(props) {
           {(() => {
             const items = [];
             for (let key in props.assigns) {
-              if(props.assigns[key] === 0) {
+              if (props.assigns[key] === 0) {
                 continue;
               }
               items.push(
@@ -107,13 +107,13 @@ function Assign(props) {
 
 function Members(props) {
   return (
-      <div className="notification is-black" style={{ border: "3px solid" }}>
-        <p>メンバー</p>
-        <hr />
-        <div style={{ maxHeight: "450px", overflow: "auto" }}>
-          {props.members.members.map((member) => {
-            return <Member alive={member.alive} name={member.name} />;
-          })}
+    <div className="notification is-black" style={{ border: "3px solid" }}>
+      <p>メンバー</p>
+      <hr />
+      <div style={{ maxHeight: "450px", overflow: "auto" }}>
+        {props.members.members.map((member) => {
+          return <Member alive={member.alive} name={member.name} />;
+        })}
       </div>
     </div>
   );
@@ -128,7 +128,7 @@ function Member(props) {
         {props.name}
       </p>
     );
-  } 
+  }
 }
 
 function Chat(props) {
@@ -136,18 +136,18 @@ function Chat(props) {
   const messages = props.messages;
   return (
 
-      <div className="notification is-black" style={{ border: "3px solid" }}>
-        <p>チャット</p>
-        <hr />
-        <ChatHistory messages={messages}/>
-        <Input
-          prompt="メッセージ"
-          button="▶おくる"
-          onSubmit={(msg) => {
-            if (msg !== "") socket.emit("clientMessage", msg);
-          }}
-        />
-      </div>
+    <div className="notification is-black" style={{ border: "3px solid" }}>
+      <p>チャット</p>
+      <hr />
+      <ChatHistory messages={messages} />
+      <Input
+        prompt="メッセージ"
+        button="▶おくる"
+        onSubmit={(msg) => {
+          if (msg !== "") socket.emit("clientMessage", msg);
+        }}
+      />
+    </div>
 
   );
 
@@ -165,37 +165,37 @@ function ChatHistory(props) {
 
   return (
     <div id="chat" style={{ maxHeight: "500px", overflow: "auto" }}>
-    {messages.messages.map((msg) => {
-      if (msg.type === "notification") {
-        return (
-          <div
-            className="notification is-primary is-light my-1"
-            key={msg.timestamp}
-          >
-            {msg.text}
-          </div>
-        );
-      } else if (msg.type === "dead") {
-        return (
-          <p key={msg.timestamp} style={{ color: "gray" }}>
-            {msg.text}
-          </p>
-        );
-      } else if (msg.type === "clickable") {
-        return (
-          <p
-            key={msg.timestamp}
-            onClick={handleClickChoice}
-            style={{ cursor: "pointer" }}
-            data-id={msg.value}
-          >
-            {msg.text}
-          </p>
-        );
-      } else {
-        return <p key={msg.timestamp}>{msg.text}</p>;
-      }
-    })}
+      {messages.messages.map((msg) => {
+        if (msg.type === "notification") {
+          return (
+            <div
+              className="notification is-primary is-light my-1"
+              key={msg.timestamp}
+            >
+              {msg.text}
+            </div>
+          );
+        } else if (msg.type === "dead") {
+          return (
+            <p key={msg.timestamp} style={{ color: "gray" }}>
+              {msg.text}
+            </p>
+          );
+        } else if (msg.type === "clickable") {
+          return (
+            <p
+              key={msg.timestamp}
+              onClick={handleClickChoice}
+              style={{ cursor: "pointer" }}
+              data-id={msg.value}
+            >
+              {msg.text}
+            </p>
+          );
+        } else {
+          return <p key={msg.timestamp}>{msg.text}</p>;
+        }
+      })}
     </div>
   );
 }
