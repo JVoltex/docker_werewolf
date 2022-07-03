@@ -37,6 +37,10 @@ module.exports.informAssign = (socket, msg) => {
   socket.emit("serverAssignInfo", msg);
 };
 
+module.exports.informRanking = (socket, msg) => {
+  socket.emit("serverRanking", msg);
+};
+
 
 module.exports.mode = (ary) => {
   let mode;

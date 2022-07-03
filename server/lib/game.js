@@ -8,6 +8,7 @@ const {
   mode,
   clickable,
   randomSort,
+  informRanking,
   getRandomIntInclusive,
 } = require("./utils");
 
@@ -29,15 +30,15 @@ class Game {
     if(true) {
       console.log(this.members.length);
       this.members.sort((a, b) => a.answer - b.answer);
-      console.log(this.members.length);
-      const n = this.assign["人狼"];
-      console.log(n);
+      
+      const numOfWerewolf = this.assign["人狼"];
+      console.log(numOfWerewolf);
       let tmpRanks = Array.from(Array(this.members.length), (v, k) => k);
       tmpRanks = randomSort(tmpRanks);
       console.log(tmpRanks);
       const werewolfRanks = [];
       console.log(this.members);
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < numOfWerewolf; i++) {
         let werewolfRank = tmpRanks[i];
         
         this.members[werewolfRank].job = "人狼";
@@ -92,10 +93,10 @@ class Game {
     const n_alive_wolf = this._filterMembers((x) => x.alive && x.job === "人狼")
       .length;
     if (n_alive_wolf / n_alive >= 0.5) {
-      this._broadcast("人狼の勝利です", note);
+      this._broadcastEndOfGame("人狼の勝利です");
       this.next = null;
     } else if (n_alive_wolf === 0) {
-      this._broadcast("市民の勝利です", note);
+      this._broadcastEndOfGame("市民の勝利です");
       this.next = null;
     } else {
       this.next = prev === this.day ? this.night : this.day;
@@ -163,6 +164,18 @@ class Game {
     executed = randomSort(executed);
     this._kill(executed[0]);
     return;
+  }
+
+  _broadcastEndOfGame(msg) {
+    this._broadcast(msg, note);
+    let rankingMsg = this._getRankingMsg();
+    this._broadcast(rankingMsg, informRanking);
+  }
+
+  _getRankingMsg() {
+    let sortedMembers = this.members.slice();
+    sortedMembers.sort((a, b) => a.answer - b.answer);
+    return sortedMembers.map((member, i) => (i+1) + ": " + member.name + " (" + member.answer +")");
   }
 
   _mode(ary) {
