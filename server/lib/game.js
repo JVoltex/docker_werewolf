@@ -151,7 +151,10 @@ class Game {
       true
     );
     let executed = this._mode(res);
-    if(executed.length > 1) {
+    if(executed.length >= this._nof_alive()) {
+      this._broadcast("全員同表なのでわしが雑に決めるぞ。", mayor);
+    }
+    else if(executed.length > 1) {
       this._broadcast("決まらなかったので決選投票を行うぞ。", mayor);
       res = await this._waitForChoices(
         "誰が人狼だと思いますか。",
@@ -160,10 +163,20 @@ class Game {
         true
       );
       executed = this._mode(res);
+
+      if(executed.length > 1) {
+        this._broadcast("決選投票でも決まらなかったのでわしが雑に決めるぞ。", mayor);
+      }
     }
+    // 全員に票が入り同表ケース(決選投票不可能)と、決選投票で決まらないケースはランダムに選択
     executed = randomSort(executed);
+
     this._kill(executed[0]);
     return;
+  }
+
+  _nof_alive() {
+    return this._filterMembers((x) => x.alive).length;
   }
 
   _broadcastEndOfGame(msg) {
