@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "config": "^3.3.7",
+    "csv": "^6.1.5",
     "express": "^4.17.1",
     "socket.io": "^3.0.4"
   }
