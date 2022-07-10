@@ -8,10 +8,19 @@ const http = require("http");
 const { mayor, inputNonNegativeInteger, inputString, informAssign } = require("./utils");
 const conf = require('config');
 
-const waitForMembers = (n, server, assign) => {
+function registeredMembers(rankingTable) {
+  let ret = rankingTable && rankingTable.items.map(item => item.name);
+  return ret;
+}
+
+const waitForMembers = (n, server, assign, rankingTable) => {
   const members = [];
   return new Promise((resolve, reject) => {
     server.ws.on("connection", (socket) => {
+      socket.emit("serverRegisteredMembersInfo", {
+        valid: (conf.mode === "pre-ranking"),
+        registeredMembers: registeredMembers(rankingTable),
+      });
       
       socket.on("clientMemberJoin", (name) => {
         informAssign(socket, assign);
@@ -74,7 +83,7 @@ module.exports.GameServer = class GameServer {
 
 module.exports.playGame = async (assign, timeLimit, server, questionnaire="", rankingTable=undefined) => {
   const nofmembers = Object.values(assign).reduce((sum, n) => (sum += n), 0);
-  const members = await waitForMembers(nofmembers, server, assign);
+  const members = await waitForMembers(nofmembers, server, assign, rankingTable);
 
   if(conf.mode === "instant-ranking") {
     // 質問への回答収集
