@@ -7,7 +7,7 @@ class Member {
     this.alive = true;
     this.job = null;
     this.socket = socket;
-    this.answer = "";
+    this.score = null;
   }
   receiveMemberInfo(members) {
     this.socket.emit(

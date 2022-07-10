@@ -6,8 +6,9 @@ const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
 const { mayor, inputNonNegativeInteger, inputString, informAssign } = require("./utils");
+const conf = require('config');
 
-const waitForMembers = (n, server, assign, questionnaire) => {
+const waitForMembers = (n, server, assign) => {
   const members = [];
   return new Promise((resolve, reject) => {
     server.ws.on("connection", (socket) => {
@@ -44,8 +45,8 @@ function _waitForAnswer(prompt, subject) {
   return new Promise((resolve, reject) => {
     subject.socket.on("clientMessage", (answer) => {
       if (answer !== "") {
-        mayor(subject.socket, "回答を受け付けた。");
-        subject.answer = answer;
+        mayor(subject.socket, "回答を受け付けた。: " + answer);
+        subject.score = answer;
         resolve(answer);
       }
     });
@@ -71,12 +72,18 @@ module.exports.GameServer = class GameServer {
   }
 };
 
-module.exports.playGame = async (assign, timeLimit, server, questionnaire="") => {
+module.exports.playGame = async (assign, timeLimit, server, questionnaire="", rankingTable=undefined) => {
   const nofmembers = Object.values(assign).reduce((sum, n) => (sum += n), 0);
-  const members = await waitForMembers(nofmembers, server, assign, questionnaire);
-  await waitForAnswers(server, questionnaire, members);
-  members.map((member) => mayor(member.socket,`回答：${member.answer}`) );
-  
+  const members = await waitForMembers(nofmembers, server, assign);
+
+  if(conf.mode === "instant-ranking") {
+    // 質問への回答収集
+    await waitForAnswers(server, questionnaire, members);
+  }
+  else if(conf.mode === "pre-ranking") {
+    _setScore(members, rankingTable);
+  }
+
   const game = new Game(members, assign, timeLimit);
   while (game.next !== null) {
     await game.proceed();
@@ -97,6 +104,13 @@ module.exports.inputAssign = async (jobs) => {
 };
 
 module.exports.inputQuestionnaire = async (prompt) => {
-　const res = await inputString(prompt);
-　return res;
+  const res = await inputString(prompt);
+  return res;
+}
+
+function _setScore(members, rankingTable) {
+  for(const member of members){
+    const item = rankingTable.items.find(item => member.name === item.name);
+    member.score = item.score;
+  }
 }

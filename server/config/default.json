@@ -1,0 +1,15 @@
+{
+  "assign":{
+    "人狼":1,
+    "占い師":0,
+    "霊媒師":1,
+    "狩人":0,
+    "パン屋":1,
+    "狂人":0,
+    "市民":5
+  },
+  "timeLimit":10,
+  "mode":"pre-ranking",
+  "rankingFileName":"data.csv",
+  "questionnaire":"好きな数字は？"
+}

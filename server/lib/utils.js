@@ -9,15 +9,18 @@ module.exports.sleep = (sec = 1) => {
 };
 
 const plainMessage = (socket, msg, type = "plain", value) => {
+  console.log("start plainMessage type: " + type + " msg: "+msg + " value: " + value);
   socket.emit("serverMessage", {
     type: type,
     text: msg,
     value: value,
   });
+  console.log("end plainMessage "+msg)
 };
 module.exports.plainMessage = plainMessage;
 
 module.exports.mayor = (socket, msg) => {
+  
   plainMessage(socket, `村長「${msg}`, "plain");
 };
 

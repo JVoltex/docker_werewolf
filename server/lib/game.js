@@ -11,6 +11,7 @@ const {
   informRanking,
   getRandomIntInclusive,
 } = require("./utils");
+const conf = require('config');
 
 class Game {
   constructor(members, assign, timeLimit = 5) {
@@ -29,7 +30,7 @@ class Game {
     this.current = this.next;
     if(true) {
       console.log(this.members.length);
-      this.members.sort((a, b) => a.answer - b.answer);
+      this.members.sort((a, b) => a.score - b.score);
       
       const numOfWerewolf = this.assign["人狼"];
       console.log(numOfWerewolf);
@@ -150,11 +151,17 @@ class Game {
       (x) => x.alive,
       true
     );
+
+    console.log("Members:");
+    console.log(this.members);
+
     let executed = this._mode(res);
     if(executed.length >= this._nof_alive()) {
+      console.log("全員同票");
       this._broadcast("全員同表なのでわしが雑に決めるぞ。", mayor);
     }
     else if(executed.length > 1) {
+      console.log("決戦投票");
       this._broadcast("決まらなかったので決選投票を行うぞ。", mayor);
       res = await this._waitForChoices(
         "誰が人狼だと思いますか。",
@@ -176,19 +183,22 @@ class Game {
   }
 
   _nof_alive() {
+    console.log("nof alive" + this._filterMembers((x) => x.alive).length);
     return this._filterMembers((x) => x.alive).length;
   }
 
   _broadcastEndOfGame(msg) {
     this._broadcast(msg, note);
-    let rankingMsg = this._getRankingMsg();
-    this._broadcast(rankingMsg, informRanking);
+    if(["instant-ranking", "pre-ranking"].includes(conf.mode)){
+      let rankingMsg = this._getRankingMsg();
+      this._broadcast(rankingMsg, informRanking);
+    }
   }
 
   _getRankingMsg() {
     let sortedMembers = this.members.slice();
-    sortedMembers.sort((a, b) => a.answer - b.answer);
-    return sortedMembers.map((member, i) => (i+1) + ": " + member.name + " (" + member.answer +")");
+    sortedMembers.sort((a, b) => a.score - b.score);
+    return sortedMembers.map((member, i) => (i+1) + ": " + member.name + " (" + member.score +")");
   }
 
   _mode(ary) {
