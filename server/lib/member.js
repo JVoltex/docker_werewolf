@@ -8,6 +8,7 @@ class Member {
     this.job = null;
     this.socket = socket;
     this.score = null;
+    this.rank = null;
   }
   receiveMemberInfo(members) {
     this.socket.emit(

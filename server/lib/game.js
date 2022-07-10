@@ -26,19 +26,23 @@ class Game {
     await this.next();
     return;
   }
+  _configIsRankingMode() {
+    return ["instant-ranking", "pre-ranking"].includes(conf.mode);
+  }
   async prepare() {
     this.current = this.next;
-    if(true) {
-      console.log(this.members.length);
-      this.members.sort((a, b) => a.score - b.score);
+    
+    if(this._configIsRankingMode()) {
       
-      const numOfWerewolf = this.assign["人狼"];
-      console.log(numOfWerewolf);
+      this.members.sort((a, b) => a.rank - b.rank);
+
       let tmpRanks = Array.from(Array(this.members.length), (v, k) => k);
       tmpRanks = randomSort(tmpRanks);
       console.log(tmpRanks);
       const werewolfRanks = [];
-      console.log(this.members);
+
+      const numOfWerewolf = this.assign["人狼"];
+      console.log("人狼数: " + numOfWerewolf);
       for (let i = 0; i < numOfWerewolf; i++) {
         let werewolfRank = tmpRanks[i];
         
@@ -189,7 +193,7 @@ class Game {
 
   _broadcastEndOfGame(msg) {
     this._broadcast(msg, note);
-    if(["instant-ranking", "pre-ranking"].includes(conf.mode)){
+    if(this._configIsRankingMode()){
       let rankingMsg = this._getRankingMsg();
       this._broadcast(rankingMsg, informRanking);
     }
@@ -197,7 +201,7 @@ class Game {
 
   _getRankingMsg() {
     let sortedMembers = this.members.slice();
-    sortedMembers.sort((a, b) => a.score - b.score);
+    sortedMembers.sort((a, b) => a.rank - b.rank);
     return sortedMembers.map((member, i) => (i+1) + ": " + member.name + " (" + member.score +")");
   }
 

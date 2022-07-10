@@ -79,6 +79,12 @@ module.exports.playGame = async (assign, timeLimit, server, questionnaire="", ra
   if(conf.mode === "instant-ranking") {
     // 質問への回答収集
     await waitForAnswers(server, questionnaire, members);
+    // rank情報追加(必ず昇順)
+    members.sort((a, b) => a.score - b.score);
+    let i = 0;
+    for(const member of this.members) {
+      member.rank = i++;
+    }
   }
   else if(conf.mode === "pre-ranking") {
     _setScore(members, rankingTable);
@@ -109,8 +115,10 @@ module.exports.inputQuestionnaire = async (prompt) => {
 }
 
 function _setScore(members, rankingTable) {
-  for(const member of members){
-    const item = rankingTable.items.find(item => member.name === item.name);
+  let i=0;
+  for(const item of rankingTable.items){
+    const member = members.find(member => member.name === item.name);
     member.score = item.score;
+    member.rank  = i++; 
   }
 }
