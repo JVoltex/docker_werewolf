@@ -1,4 +1,5 @@
 import Input from "./Input";
+import MySelect from "./MySelect";
 import { useContext, useEffect, useReducer } from "react";
 import { SocketContext, PhaseDispatch, NameDispatch } from "./Wrapper";
 
@@ -22,20 +23,25 @@ function Welcome() {
     };
   }, []);
 
-  
-  return (
-    <div className="columns is-vcentered">
-      <div className="column is-8">
-        <div className="notification is-black">
-          <p>村長「はるばるとようこそ。</p>
-          <p>村長「まずは名前を聞かせておくれ。</p>
-        </div>
-      </div>
-      <div className="column">
-        {console.log("render Input")}
-        {console.log(registeredMembersInfo)}
+  let inputForm;
+  if(!registeredMembersInfo.valid) {
+      inputForm = 
         <Input
           prompt="名前"
+          button="けってい"
+          onSubmit={(name) => {
+            if (name !== "") {
+              nameDispatch({ type: name });
+              phaseDispatch({ type: "game" });
+            } else {
+              alert("村長「こら、ちゃんと名乗れ！");
+            }
+          }}
+        />
+  }
+  else {
+      inputForm = 
+        <MySelect
           button="けってい"
           onSubmit={(name) => {
             if (name !== "") {
@@ -48,6 +54,20 @@ function Welcome() {
           selectable={registeredMembersInfo.valid}
           options={registeredMembersInfo.registeredMembers}
         />
+
+  }
+  return (
+    <div className="columns is-vcentered">
+      <div className="column is-8">
+        <div className="notification is-black">
+          <p>村長「はるばるとようこそ。</p>
+          <p>村長「まずは名前を聞かせておくれ。</p>
+        </div>
+      </div>
+      <div className="column">
+        {console.log("render Input")}
+        {console.log(registeredMembersInfo)}
+        {inputForm}
       </div>
     </div>
   );
