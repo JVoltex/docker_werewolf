@@ -5,6 +5,7 @@ class Member {
   constructor(name, socket) {
     this.name = name;
     this.alive = true;
+    this.voted = false;
     this.job = null;
     this.socket = socket;
     this.score = null;
@@ -25,6 +26,10 @@ class Member {
     }
     if (member === this) {
       res.name = res.name + "（あなた）";
+    }
+
+    if(member.voted) {
+      res.name = res.name + "（投票済み）";
     }
     return res;
   }

@@ -153,6 +153,7 @@ class Game {
       "誰が人狼だと思いますか。",
       (x) => x.alive,
       (x) => x.alive,
+      true,
       true
     );
 
@@ -162,7 +163,7 @@ class Game {
     let executed = this._mode(res);
     if(executed.length >= this._nof_alive()) {
       console.log("全員同票");
-      this._broadcast("全員同表なのでわしが雑に決めるぞ。", mayor);
+      this._broadcast("全員同表なのでわしが決めるぞ。", mayor);
     }
     else if(executed.length > 1) {
       console.log("決戦投票");
@@ -171,12 +172,13 @@ class Game {
         "誰が人狼だと思いますか。",
         (x) => x.alive & !executed.includes(x),
         (x) => x.alive & executed.includes(x),
+        true,
         true
       );
       executed = this._mode(res);
 
       if(executed.length > 1) {
-        this._broadcast("決選投票でも決まらなかったのでわしが雑に決めるぞ。", mayor);
+        this._broadcast("決選投票でも決まらなかったのでわしが決めるぞ。", mayor);
       }
     }
     // 全員に票が入り同表ケース(決選投票不可能)と、決選投票で決まらないケースはランダムに選択
@@ -283,7 +285,7 @@ class Game {
     await sleep(this.timeLimit);
     this._stopChat();
   }
-  _waitForSingleChoice(prompt, subject, objects) {
+  _waitForSingleChoice(prompt, subject, objects, showMemberStateOfChoice = false) {
     objects = objects.filter((x) => x !== subject);
     const validId = objects.map((x, i) => i);
     // when there is no choice
@@ -298,6 +300,10 @@ class Game {
       subject.socket.on("clientMessage", (msg) => {
         if (validId.indexOf(Number(msg)) !== -1) {
           info(subject.socket, "選択を受け付けました。");
+          subject.voted = true;
+          if (showMemberStateOfChoice) {
+            this._sendMemberInfo();
+          }
           if (this.current === this.night)
             subject.nightAction(objects[Number(msg)]);
           resolve(objects[Number(msg)]);
@@ -307,12 +313,24 @@ class Game {
       subject.socket.removeAllListeners("clientMessage");
     });
   }
-  async _waitForChoices(prompt, filterFuncS, filterFuncO, broadcast) {
+  async _waitForChoices(
+    prompt, 
+    filterFuncS, 
+    filterFuncO, 
+    broadcast, 
+    showMemberStateOfChoice = false
+    ) {
     const subjects = this._filterMembers(filterFuncS);
     const objects = this._filterMembers(filterFuncO);
     const choices = await Promise.all(
-      subjects.map((x) => this._waitForSingleChoice(prompt, x, objects))
+      subjects.map((x) => this._waitForSingleChoice(prompt, x, objects, showMemberStateOfChoice))
     );
+
+    subjects.map((x) => {x.voted = false});
+    if (showMemberStateOfChoice) {
+      this._sendMemberInfo();
+    }
+
     if (broadcast) {
       for (let i = 0; i < subjects.length; i++) {
         this._broadcast(`${subjects[i].name} -> ${choices[i].name}`);
