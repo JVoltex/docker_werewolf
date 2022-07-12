@@ -11,5 +11,12 @@
   "timeLimit":10,
   "mode":"pre-ranking",
   "rankingFileName":"data.csv",
+  "rankingModeSetting": {
+    "jobHint": [
+      "人狼",
+      "霊媒師",
+      "パン屋"
+    ]
+  },
   "questionnaire":"好きな数字は？"
 }

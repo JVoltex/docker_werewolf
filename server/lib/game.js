@@ -31,59 +31,32 @@ class Game {
   }
   async prepare() {
     this.current = this.next;
-    
+
+    // 役職割り振り
+    let jobs = [];
+    for (const [k, v] of Object.entries(this.assign)) {
+      for (let i = 0; i < v; i++) jobs.push(k);
+    }
+    jobs = randomSort(jobs);
+    for (const i of this.members) {
+      i.job = jobs.pop();
+    }
+
     if(this._configIsRankingMode()) {
-      
-      this.members.sort((a, b) => a.rank - b.rank);
-
-      let tmpRanks = Array.from(Array(this.members.length), (v, k) => k);
-      tmpRanks = randomSort(tmpRanks);
-      console.log(tmpRanks);
-      const werewolfRanks = [];
-
-      const numOfWerewolf = this.assign["人狼"];
-      console.log("人狼数: " + numOfWerewolf);
-      for (let i = 0; i < numOfWerewolf; i++) {
-        let werewolfRank = tmpRanks[i];
-        
-        this.members[werewolfRank].job = "人狼";
-        werewolfRanks.push(werewolfRank);
-      }
-      
-      console.log(this.members);
-            
-      this._broadcast(`人狼は次の順位の人です：${werewolfRanks.map(r => r + 1)}`, note);
-      
-      // 人狼以外をランダムに割り振る
-      let jobs = [];
+  
+      // 役職ヒント
       for (const [k, v] of Object.entries(this.assign)) {
-        if(k!== "人狼") {
-          for (let i = 0; i < v; i++) jobs.push(k);
+        if(!conf.rankingModeSetting.jobHint.includes(k)){
+          continue;
         }
+        const ranksOfJob = this.members.filter(m => m.job === k).map(m => m.rank);
+        this._broadcast(k + `は次の順位の人です：${ranksOfJob.map(r => r + 1)}`, note);
       }
-      jobs = randomSort(jobs);
-      console.log(jobs);
-      for (const i of this.members) {
-        if(i.job === null) {
-          console.log(i);
-          i.job = jobs.pop();
-        }
-      }
-
-      // membersの順序でプレイヤに表示されるので、再度ランダムにしておく。
+      
+      // membersの順序でプレイヤに表示されるので、どこかでランク順になってることを懸念してランダムにしておく。
       this.members = randomSort(this.members);
+    }
 
-    }
-    else {
-      let jobs = [];
-      for (const [k, v] of Object.entries(this.assign)) {
-        for (let i = 0; i < v; i++) jobs.push(k);
-      }
-      jobs = randomSort(jobs);
-      for (const i of this.members) {
-        i.job = jobs.pop();
-      }
-    }
     this.members.map((x) => note(x.socket, `あなたは【${x.job}】です。`));
     const n_alive_wolf = this._filterMembers((x) => x.alive && x.job === "人狼")
     n_alive_wolf.map((x) => note(x.socket, `${n_alive_wolf.map((x) => x.name).join()}が仲間ですよ。`));
