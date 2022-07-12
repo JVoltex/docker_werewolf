@@ -44,6 +44,9 @@ module.exports.informRanking = (socket, msg) => {
   socket.emit("serverRanking", msg);
 };
 
+module.exports.informVote = (socket, choices) => {
+  socket.emit("serverVote", {valid: true, choices: choices});
+}
 
 module.exports.mode = (ary) => {
   let mode;

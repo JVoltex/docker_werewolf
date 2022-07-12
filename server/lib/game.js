@@ -7,6 +7,7 @@ const {
   plainMessage,
   mode,
   clickable,
+  informVote,
   randomSort,
   informRanking,
   getRandomIntInclusive,
@@ -302,6 +303,8 @@ class Game {
     // when there are some choices
     info(subject.socket, `${prompt}（半角数字）`);
     objects.map((x, i) => clickable(subject.socket, `${i}: ${x.name}`, i));
+    informVote(subject.socket, objects.map((x, i) => i));
+    
     return new Promise((resolve, reject) => {
       subject.socket.on("clientMessage", (msg) => {
         if (validId.indexOf(Number(msg)) !== -1) {

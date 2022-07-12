@@ -1,4 +1,5 @@
 import Input from "./Input";
+import MySelect from "./MySelect";
 import { useContext, useEffect, useReducer } from "react";
 import { SocketContext } from "./Wrapper";
 
@@ -14,6 +15,9 @@ function assignsReducer(state, action) {
 function rankingReducer(state, action) {
   return action;
 }
+function voteReducer(state, action) {
+  return action;
+}
 
 function Game(props) {
   const socket = useContext(SocketContext);
@@ -25,6 +29,7 @@ function Game(props) {
   });
   const [assigns, assignsDispatch] = useReducer(assignsReducer, {});
   const [ranking, rankingDispatch] = useReducer(rankingReducer, []);
+  
 
   useEffect(() => {
     // handling assigns
@@ -48,7 +53,8 @@ function Game(props) {
     socket.on("serverMemberInfo", membersCallback);
     // handling ranking
     socket.on("serverRanking", rankingDispatch);
-    
+
+
     socket.emit("clientMemberJoin", props.name);
     return () => {
       socket.removeListener("serverAssignInfo", assignsCallback);
@@ -166,19 +172,51 @@ function Ranking(props) {
 function Chat(props) {
   const socket = useContext(SocketContext);
   const messages = props.messages;
+  //const vote = props.vote;
+  const [vote, voteDispatch] = useReducer(voteReducer, {valid:false});
+
+  useEffect(() => {
+    // handling vote
+    socket.on("serverVote", voteDispatch);
+
+    return () => {
+      socket.removeListener("serverVote", voteDispatch);
+    };
+  }, []);
+
+
+  let inputForm;
+  if(!vote.valid) {
+    inputForm = 
+      <Input
+        prompt="メッセージ"
+        button="▶おくる"
+        onSubmit={(msg) => {
+          if (msg !== "") socket.emit("clientMessage", msg);
+        }}
+      />
+  }
+  else {
+    inputForm =
+      <MySelect
+        button="けってい"
+        onSubmit={(msg) => {
+          if (msg !== "") {
+            socket.emit("clientMessage", msg);
+            voteDispatch({valid: false});
+          }
+        }}
+        selectable={vote.valid}
+        options={vote.choices}
+      />
+  }
   return (
 
       <div className="notification is-black" style={{ border: "3px solid" }}>
         <p>チャット</p>
         <hr />
         <ChatHistory messages={messages}/>
-        <Input
-          prompt="メッセージ"
-          button="▶おくる"
-          onSubmit={(msg) => {
-            if (msg !== "") socket.emit("clientMessage", msg);
-          }}
-        />
+        {inputForm}
       </div>
 
   );
@@ -217,8 +255,6 @@ function ChatHistory(props) {
         return (
           <p
             key={msg.timestamp}
-            onClick={handleClickChoice}
-            style={{ cursor: "pointer" }}
             data-id={msg.value}
           >
             {msg.text}
