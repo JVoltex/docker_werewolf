@@ -42,17 +42,44 @@ class Game {
       i.job = jobs.pop();
     }
 
-    if(this._configIsRankingMode()) {
-  
+    if (this._configIsRankingMode()) {
+
+      // 役職が極端なランクになったらやり直す
+      // prohibitExtremeRankは基本的に1役職だけtrueとすることを想定(trueが複数だと順位づけが複雑になるので)
+      for (const [k, v] of Object.entries(this.assign)) {
+        if (!conf.rankingModeSetting.prohibitExtremeRank[k]) {
+          continue;
+        }
+
+        const membersOfJob = this.members.filter(m => m.job === k);
+        for (const member of membersOfJob.filter(m => this._isExtremeRank(m.rank))) {
+
+          let tmpRanks = Array.from(Array(this.members.length - 1), (v, k) => k);
+          tmpRanks = randomSort(tmpRanks);
+          for (const tmpRank of tmpRanks.filter(tr => !this._isExtremeRank(tr))) {
+            const tmpRankMember = this.members.find(m => m.rank === tmpRank);
+            if (tmpRankMember.job === member.job) {
+              continue;
+            }
+
+            const jobSwp = tmpRankMember.job;
+            tmpRankMember.job = member.job;
+            member.job = jobSwp;
+            break;
+          }
+
+          console.log(this.members);
+        }
+      }
       // 役職ヒント
       for (const [k, v] of Object.entries(this.assign)) {
-        if(!conf.rankingModeSetting.jobHint.includes(k)){
+        if (!conf.rankingModeSetting.jobHint.includes(k)) {
           continue;
         }
         const ranksOfJob = this.members.filter(m => m.job === k).map(m => m.rank);
         this._broadcast(k + `は次の順位の人です：${ranksOfJob.map(r => r + 1)}`, note);
       }
-      
+
       // membersの順序でプレイヤに表示されるので、どこかでランク順になってることを懸念してランダムにしておく。
       this.members = randomSort(this.members);
     }
@@ -64,6 +91,12 @@ class Game {
     this.next = this.judge;
     return;
   }
+
+  _isExtremeRank(rank) {
+    return (rank === 0) || (rank === (this.members.length - 1));
+  }
+
+
   async judge() {
     const prev = this.current;
     this.current = this.next;
@@ -134,11 +167,11 @@ class Game {
     console.log(this.members);
 
     let executed = this._mode(res);
-    if(executed.length >= this._nof_alive()) {
+    if (executed.length >= this._nof_alive()) {
       console.log("全員同票");
       this._broadcast("全員同表なのでわしが決めるぞ。", mayor);
     }
-    else if(executed.length > 1) {
+    else if (executed.length > 1) {
       console.log("決戦投票");
       this._broadcast("決まらなかったので決選投票を行うぞ。", mayor);
       res = await this._waitForChoices(
@@ -150,7 +183,7 @@ class Game {
       );
       executed = this._mode(res);
 
-      if(executed.length > 1) {
+      if (executed.length > 1) {
         this._broadcast("決選投票でも決まらなかったのでわしが決めるぞ。", mayor);
       }
     }
@@ -168,7 +201,7 @@ class Game {
 
   _broadcastEndOfGame(msg) {
     this._broadcast(msg, note);
-    if(this._configIsRankingMode()){
+    if (this._configIsRankingMode()) {
       let rankingMsg = this._getRankingMsg();
       this._broadcast(rankingMsg, informRanking);
     }
@@ -177,7 +210,7 @@ class Game {
   _getRankingMsg() {
     let sortedMembers = this.members.slice();
     sortedMembers.sort((a, b) => a.rank - b.rank);
-    return sortedMembers.map((member, i) => (i+1) + ": " + member.name + " (" + member.score +")");
+    return sortedMembers.map((member, i) => (i + 1) + ": " + member.name + " (" + member.score + ")");
   }
 
   _mode(ary) {
@@ -287,19 +320,19 @@ class Game {
     });
   }
   async _waitForChoices(
-    prompt, 
-    filterFuncS, 
-    filterFuncO, 
-    broadcast, 
+    prompt,
+    filterFuncS,
+    filterFuncO,
+    broadcast,
     showMemberStateOfChoice = false
-    ) {
+  ) {
     const subjects = this._filterMembers(filterFuncS);
     const objects = this._filterMembers(filterFuncO);
     const choices = await Promise.all(
       subjects.map((x) => this._waitForSingleChoice(prompt, x, objects, showMemberStateOfChoice))
     );
 
-    subjects.map((x) => {x.voted = false});
+    subjects.map((x) => { x.voted = false });
     if (showMemberStateOfChoice) {
       this._sendMemberInfo();
     }

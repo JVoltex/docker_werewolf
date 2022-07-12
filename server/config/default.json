@@ -16,7 +16,16 @@
       "人狼",
       "霊媒師",
       "パン屋"
-    ]
+    ], 
+    "prohibitExtremeRank": {
+      "人狼":true,
+      "占い師":false,
+      "霊媒師":false,
+      "狩人":false,
+      "パン屋":false,
+      "狂人":false,
+      "市民":false
+    }
   },
   "questionnaire":"好きな数字は？"
 }
