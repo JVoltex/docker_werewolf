@@ -11,10 +11,11 @@ const waitForMembers = (n, server, assign, questionnaire) => {
   const members = [];
   return new Promise((resolve, reject) => {
     server.ws.on("connection", (socket) => {
-      
+      let member = null;
       socket.on("clientMemberJoin", (name) => {
         informAssign(socket, assign);
-        members.push(new Member(name, socket));
+        member = new Member(name, socket);
+        members.push(member);
         members.map((x) => x.receiveMemberInfo(members));
         mayor(socket, `ようこそ【${name}】さん。`);
         mayor(socket, `皆が揃うまでしばし待たれよ。`);
@@ -22,6 +23,15 @@ const waitForMembers = (n, server, assign, questionnaire) => {
         if (members.length === n) {
           resolve(members);
         }
+      });
+      socket.on('disconnect', () => {
+        if(!member){return;}
+        
+        var index = members.indexOf(member);
+        members.splice(index, 1);
+        console.log(`【${member.name}】さんが退室しました。`);
+        members.map((x) => x.receiveMemberInfo(members));
+        member = null;
       });
     });
   }).finally(() => {
