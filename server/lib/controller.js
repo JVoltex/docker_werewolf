@@ -22,9 +22,11 @@ const waitForMembers = (n, server, assign, rankingTable) => {
         registeredMembers: registeredMembers(rankingTable),
       });
       
+      let member = null;
       socket.on("clientMemberJoin", (name) => {
         informAssign(socket, assign);
-        members.push(new Member(name, socket));
+        member = new Member(name, socket);
+        members.push(member);
         members.map((x) => x.receiveMemberInfo(members));
         mayor(socket, `ようこそ【${name}】さん。`);
         mayor(socket, `皆が揃うまでしばし待たれよ。`);
@@ -33,9 +35,19 @@ const waitForMembers = (n, server, assign, rankingTable) => {
           resolve(members);
         }
       });
+      socket.on('disconnect', () => {
+        if(!member){return;}
+        
+        var index = members.indexOf(member);
+        members.splice(index, 1);
+        console.log(`【${member.name}】さんが退室しました。`);
+        members.map((x) => x.receiveMemberInfo(members));
+        member = null;
+      });
     });
   }).finally(() => {
     members.map((x) => x.socket.removeAllListeners("clientMemberJoin"));
+    members.map((x) => x.socket.removeAllListeners("disconnect"));
   });
 };
 
