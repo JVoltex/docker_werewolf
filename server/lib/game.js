@@ -170,7 +170,7 @@ class Game {
     let executed = this._mode(res);
     if (executed.length >= this._nof_alive()) {
       console.log("全員同票");
-      this._broadcast("全員同表なのでわしが決めるぞ。", mayor);
+      this._broadcast("全員同数なのでわしが決めるぞ。", mayor);
     }
     else if (executed.length > 1) {
       console.log("決戦投票");
