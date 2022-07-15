@@ -91,7 +91,7 @@ module.exports.playGame = async (assign, timeLimit, server, questionnaire="", ra
     // rank情報追加(必ず昇順)
     members.sort((a, b) => a.score - b.score);
     let i = 0;
-    for(const member of this.members) {
+    for(const member of members) {
       member.rank = i++;
     }
   }
