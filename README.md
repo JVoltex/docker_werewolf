@@ -1,7 +1,9 @@
-⚠️ メンテナンスやGitHub Container Registryでのイメージ配布をやめます。使ってくださった方、ありがとうございました。
 
-# dr666m1/werewolf
+# ランキング人狼
 <img src="https://user-images.githubusercontent.com/26474260/104125977-64bcd580-539d-11eb-969a-8562af25f897.png" width=800px>
+
+## 派生元
+dr666m1/werewolf(https://github.com/dr666m1/docker_werewolf)
 
 ## 概要
 人狼ゲームを起動するdockerイメージのリポジトリです。
@@ -9,15 +11,27 @@
 [ngrok](https://ngrok.com/)などを利用する必要があります。
 
 ## 使い方（ホスト）
-### dockerコンテナの起動
-以下のコマンドで起動します。
-初回はGitHub Container Registryからイメージがpullされます。
+### dockerイメージ作成
+pull後に以下のコマンドでDockerイメージを作成します。
 
 ```
-docker container run -it --rm -p 3000:3000 ghcr.io/dr666m1/werewolf
+docker build . -t werewolf
 ```
 
-### ゲームの設定
+### dockerコンテナの起動・ゲーム開始
+
+#### 変更がない場合
+```
+docker run -it --name werewolf_container -p 3000:3000 werewolf
+```
+
+#### 変更がある場合
+ngrokを同コンテナで立ち上げる場合など。今はngrokはDockerfileからでなく手動で立ち上げています。
+```
+docker run -itd --name werewolf_container -p 3000:3000 werewolf /bin/sh
+```
+
+### 設定を変えての起動
 コンテナ起動後、役職ごとの人数・相談時間の設定を求められます。
 画面の指示に従い、半角数字で入力してください。
 
@@ -33,6 +47,7 @@ GCEなどパブリックIPのあるサーバーで起動する場合は、特別
 #### それ以外の場合
 手元のPCで起動する場合は[ngrok](https://ngrok.com/)を利用するのが簡単です。
 ただ、無料枠での利用に`4 tunnels / ngrok process`という制限があるようです。
+
 
 ## 使い方（全員）
 ここからは参加する全員の操作です。
@@ -50,9 +65,8 @@ GCEなどパブリックIPのあるサーバーで起動する場合は、特別
 - 占い師
 - 霊媒師
 - 狩人
-
-### 役職などの設定を次のゲームに使いまわせる？
-今の実装だと1ゲームごとにコンテナの起動・役職などの設定・ブラウザの更新が必要になります。
+- パン屋
+- 狂人
 
 ### スマホからも遊べる？
 UIはbulmaを利用しているので、スマホ画面にもいい感じに調整されるはずです。
