@@ -31,6 +31,43 @@ ngrokを同コンテナで立ち上げる場合など。今はngrokはDockerfile
 docker run -itd --name werewolf_container -p 3000:3000 werewolf /bin/sh
 ```
 
+### ゲーム設定
+役職や相談時間を server/config/default.json で設定できます。
+
+#### assign
+役職の人数設定
+#### timeLimit
+相談時間。今は昼も夜も同じ
+#### mode
+3モードあります。
+* normal 
+* instant-ranking
+* pre-ranking
+
+##### normal
+普通の人狼
+
+##### instant-ranking
+ランキング人狼。ゲーム開始後にdefault.jsonのquestionnaireに設定した質問をメンバーに行い、その回答結果を昇順にランキングを作成して、役職のランキングを提示します。
+
+##### pre-ranking
+ランキング人狼。ゲーム開始前に作成したランキングデータに基づいて、役職のランキングを提示します。
+ランキングファイル名はdefaault.jsonで設定します。ランキングファイルはserver/から探されます。
+このモード時のみ、メンバーは入室時に自分の名前を自由設定できず、ランキングにある名前から選択して入ります。
+
+#### rankingFileName
+pre-rankingモードで使用するランキングファイルのファイル名
+
+#### rankingModeSetting.jobHint
+ランキング人狼モード時、ここに追加した役職は、ゲーム開始後にランキングを明かされます。
+
+#### rankingModeSetting.prohibitExtremeRank
+ランキング人狼モード時、trueに設定された役職は、1位と最下位からは選ばれません。
+
+#### questionnaire
+instant-rankingモードで使用する、ゲーム開始後の質問設定。
+
+
 ### ポートの公開
 人狼ゲームが起動しているコンテナを公開します。
 
