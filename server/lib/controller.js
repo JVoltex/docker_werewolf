@@ -29,6 +29,9 @@ const waitForMembers = (n, server, assign, rankingTable) => {
         members.push(member);
         members.map((x) => x.receiveMemberInfo(members));
         mayor(socket, `ようこそ【${name}】さん。`);
+        if(members.filter(m => m.name == name).length > 1) {
+          mayor(socket, `お主と名前が被っておる者がおる。このままでは災いが起きる`);
+        }
         mayor(socket, `皆が揃うまでしばし待たれよ。`);
         console.log(`【${name}】さんが入室しました。`);
         if (members.length === n) {
