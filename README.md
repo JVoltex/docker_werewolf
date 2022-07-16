@@ -31,12 +31,6 @@ ngrokを同コンテナで立ち上げる場合など。今はngrokはDockerfile
 docker run -itd --name werewolf_container -p 3000:3000 werewolf /bin/sh
 ```
 
-### 設定を変えての起動
-コンテナ起動後、役職ごとの人数・相談時間の設定を求められます。
-画面の指示に従い、半角数字で入力してください。
-
-<img src="https://user-images.githubusercontent.com/26474260/104125841-b31da480-539c-11eb-9e3a-356c04a178c1.png" width=800px>
-
 ### ポートの公開
 人狼ゲームが起動しているコンテナを公開します。
 
