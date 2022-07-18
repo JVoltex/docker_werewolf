@@ -5,7 +5,7 @@ const Game = require("./game");
 const { Server } = require("socket.io");
 const express = require("express");
 const http = require("http");
-const { mayor, inputNonNegativeInteger, inputString, informAssign } = require("./utils");
+const { mayor, inputNonNegativeInteger, inputString, informAssign, informRankingTitle } = require("./utils");
 const conf = require('config');
 
 function registeredMembers(rankingTable) {
@@ -25,6 +25,8 @@ const waitForMembers = (n, server, assign, rankingTable) => {
       let member = null;
       socket.on("clientMemberJoin", (name) => {
         informAssign(socket, assign);
+        informRankingTitle(socket, rankingTable.title);
+
         member = new Member(name, socket);
         members.push(member);
         members.map((x) => x.receiveMemberInfo(members));
@@ -114,7 +116,7 @@ module.exports.playGame = async (assign, timeLimit, server, questionnaire="", ra
     _setScore(members, rankingTable);
   }
 
-  const game = new Game(members, assign, timeLimit);
+  const game = new Game(members, assign, timeLimit, rankingTable);
   while (game.next !== null) {
     await game.proceed();
   }
@@ -137,6 +139,8 @@ module.exports.inputQuestionnaire = async (prompt) => {
   const res = await inputString(prompt);
   return res;
 }
+
+
 
 function _setScore(members, rankingTable) {
   let i=0;

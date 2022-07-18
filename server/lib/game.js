@@ -15,12 +15,13 @@ const {
 const conf = require('config');
 
 class Game {
-  constructor(members, assign, timeLimit = 5) {
+  constructor(members, assign, timeLimit = 5, rankingTable=undefined) {
     this.members = members;
     this.assign = assign;
     this.next = this.prepare;
     this.current = null;
     this.timeLimit = timeLimit;
+    this.rankingTable = rankingTable;
   }
   // controll method
   async proceed() {
@@ -203,7 +204,10 @@ class Game {
   _broadcastEndOfGame(msg) {
     this._broadcast(msg, note);
     if (this._configIsRankingMode()) {
-      let rankingMsg = this._getRankingMsg();
+      let rankingMsg = { 
+        title: this.rankingTable.title,
+        ranking: this._getRankingMsg()
+      }
       this._broadcast(rankingMsg, informRanking);
     }
   }
@@ -213,7 +217,7 @@ class Game {
     sortedMembers.sort((a, b) => a.rank - b.rank);
     return sortedMembers.map((member, i) => (i + 1) + ": " + member.name + " (" + member.score + ")");
   }
-
+  
   _mode(ary) {
     let res = [];
     let count = 0;

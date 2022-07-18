@@ -44,6 +44,12 @@ module.exports.informRanking = (socket, msg) => {
   socket.emit("serverRanking", msg);
 };
 
+module.exports.informRankingTitle = (socket, msg) => {
+  socket.emit("serverRankingTitle", msg);
+};
+
+
+
 module.exports.informVote = (socket, choices) => {
   socket.emit("serverVote", {valid: true, choices: choices});
 }

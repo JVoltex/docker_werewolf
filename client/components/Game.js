@@ -15,6 +15,9 @@ function assignsReducer(state, action) {
 function rankingReducer(state, action) {
   return action;
 }
+function rankingTitleReducer(state, action) {
+  return action;
+}
 function voteReducer(state, action) {
   return action;
 }
@@ -149,18 +152,32 @@ function Member(props) {
 }
 
 function Ranking(props) {
+  const socket = useContext(SocketContext);
+  
+
+  const [rankingTitle, rankingTitleDispatch] = useReducer(rankingTitleReducer, "");
+
+  useEffect(() => {
+    // handling rankingTitle
+    socket.on("serverRankingTitle", rankingTitleDispatch);
+
+    return () => {
+      socket.removeListener("serverRankingTitle", rankingTitleDispatch);
+    };
+  }, []);
+
+  const ranking=props.ranking
   let contents;
-  if (props.ranking.length === 0) {
+  if (ranking.length === 0) {
      contents = (<p>***</p>);
   } else {
-     //contents = props.ranking;
-    contents = props.ranking.map((item) => {
+    contents = ranking.map((item) => {
       return <p>{item}</p>;
     });
   }
   return (
     <div>
-      <p>ランキング</p>
+      <p>ランキング: {rankingTitle}</p>
       <hr />
       <div style={{ maxHeight: "450px", overflow: "auto" }}>
         {contents}
