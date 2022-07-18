@@ -19,6 +19,16 @@ function MySelect(props) {
   console.log("selectable: " + props.selectable)
   console.log("options: " + props.options)
   
+  const colourStyles = {
+    control: (styles) => ({ ...styles, backgroundColor: 'white' }),
+    option: (styles) => {
+      return {
+      ...styles,
+       color: 'black'
+      };
+    },
+  };
+  
   let inputValue=null;
   if(props.selectable){
     const options = props.options.map((option) => {
@@ -35,7 +45,8 @@ function MySelect(props) {
       selectedDispatch(e.value);
     }
     
-    inputValue = <Select id="select" options={options} onChange={(e)=>selectedCallback(e)} />;
+    inputValue = <Select options={options} onChange={(e)=>selectedCallback(e)} 
+      styles={colourStyles} />;
   }
   
   return (
